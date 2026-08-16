@@ -89,6 +89,63 @@
       color: var(--text-muted);
     }
 
+    /* ----- CATEGORY RIBBON (sticky) ----- */
+    .category-ribbon {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 0;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+    .category-ribbon::-webkit-scrollbar { display: none; }
+    .category-ribbon .cat-btn {
+      flex: 0 0 auto;
+      padding: 6px 14px;
+      font-family: 'Marcellus', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .category-ribbon .cat-btn:hover {
+      color: var(--text-light);
+      border-color: var(--accent-gold);
+    }
+    .category-ribbon .cat-btn.active {
+      background: var(--accent-gold);
+      color: var(--bg-dark);
+      border-color: var(--accent-gold);
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(243,186,47,0.3);
+    }
+    @media (max-width: 768px) {
+      .category-ribbon {
+        padding: 6px 10px;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .category-ribbon .cat-btn {
+        font-size: 0.7rem;
+        padding: 5px 12px;
+      }
+    }
+
     /* SHOWCASE CARDS */
     .showcase-grid {
       display: grid;
@@ -177,7 +234,7 @@
     .panel-item-name { color: var(--text-light); font-weight: 600; }
     .panel-item-price { color: var(--accent-gold); font-weight: 700; }
 
-    /* MAIN MENU - COMPACT LAYOUT */
+    /* MAIN MENU */
     .menu-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .menu-sheet {
       background: var(--card-bg);
@@ -187,7 +244,6 @@
       box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 0 8px 24px rgba(0,0,0,0.7);
     }
 
-    /* --- IMPROVED SECTION TITLES --- */
     .section-title {
       position: relative;
       font-family: 'Cinzel', serif;
@@ -200,6 +256,7 @@
       align-items: center;
       gap: 8px;
       padding-bottom: 9px;
+      scroll-margin-top: 90px;
     }
     .section-title::after {
       content: '';
@@ -216,16 +273,13 @@
       70% { transform: scale(0.96) rotate(2deg); filter: drop-shadow(0 0 3px #d49a1a); }
     }
 
-    /* --- IMPROVED MENU ITEMS --- */
     .menu-item {
       margin-bottom: 16px;
       padding: 4px 0;
       border-radius: 4px;
       transition: background 0.2s;
     }
-    .menu-item:hover {
-      background: rgba(255,255,255,0.02);
-    }
+    .menu-item:hover { background: rgba(255,255,255,0.02); }
 
     .item-top {
       display: flex;
@@ -275,7 +329,6 @@
     .badge-popular { background: #c62828; color: #fff; }
     .badge-special { background: #e65100; color: #fff; }
 
-    /* --- IMPROVED CHEF BOX --- */
     .chef-box {
       margin-top: 12px;
       margin-bottom: 18px;
@@ -306,7 +359,7 @@
       margin-bottom: 2px;
     }
 
-    /* ADD TO CART BUTTON (40px, inverted colors) */
+    /* ADD TO CART BUTTON */
     .add-to-cart-btn {
       width: 40px;
       height: 40px;
@@ -470,7 +523,6 @@
     }
     .cart-line-remove:hover { color: #e65100; }
 
-    /* --- IMPROVED BUTTONS --- */
     .cart-actions {
       display: flex;
       gap: 10px;
@@ -508,7 +560,7 @@
     }
     .cart-action-waiter:hover { box-shadow: 0 0 14px rgba(243,186,47,0.5); }
 
-    /* ----- UPSELL TOAST ----- */
+    /* UPSELL TOAST */
     .upsell-toast {
       position: fixed;
       left: 20px;
@@ -574,7 +626,7 @@
     }
     .upsell-dismiss-btn:hover { color: var(--text-light); border-color: var(--accent-gold); }
 
-    /* ----- WAITER SUMMARY (inside cart panel) ----- */
+    /* WAITER SUMMARY */
     #waiterSummary {
       display: none;
       padding: 16px;
@@ -621,7 +673,6 @@
       color: var(--text-light);
     }
 
-    /* MOBILE RESPONSIVE */
     @media (max-width: 768px) {
       .main-title { font-size: 1.8rem; }
       .menu-container { grid-template-columns: 1fr; gap: 12px; }
@@ -632,9 +683,7 @@
         left: 8px; right: 8px; bottom: 8px;
         border-radius: 10px;
       }
-      .cart-bar.expanded .cart-panel {
-        max-height: 200px;
-      }
+      .cart-bar.expanded .cart-panel { max-height: 200px; }
       .upsell-toast {
         left: 8px; right: 8px;
         bottom: 110px;
@@ -642,12 +691,11 @@
       }
       .item-desc { padding-right: 0; }
       .top-slider { font-size: 0.8rem; flex-direction: column; gap: 4px; }
-      body {
-        padding-bottom: 130px;
-      }
+      body { padding-bottom: 130px; }
       .section-title {
         font-size: 1rem;
         margin-bottom: 20px;
+        scroll-margin-top: 80px;
       }
     }
 
@@ -723,7 +771,7 @@
 
   <div class="main-wrapper">
 
-    <!-- TOP SLIDER / PHONE BAR -->
+    <!-- TOP SLIDER -->
     <div class="top-slider">
       <span class="label">📞 Контакт:</span>
       <span class="phone">070 123 456</span>
@@ -738,8 +786,21 @@
       <p class="main-subtitle">Традиционална скара, семејни рецепти и свежи локални состојки</p>
     </header>
 
-    <!-- SHOWCASE CARDS -->
+    <!-- CATEGORY RIBBON -->
+    <nav class="category-ribbon" id="categoryRibbon">
+      <button class="cat-btn active" data-target="section-soups">Чорби</button>
+      <button class="cat-btn" data-target="section-starters">Предјадења</button>
+      <button class="cat-btn" data-target="section-grill">Скара</button>
+      <button class="cat-btn" data-target="section-sides">Прилози</button>
+      <button class="cat-btn" data-target="section-drinks">Пијалаци</button>
+      <button class="cat-btn" data-target="section-coffee">Кафе</button>
+      <button class="cat-btn" data-target="section-desserts">Десерти</button>
+    </nav>
+
+    <!-- ===== SHOWCASE CARDS (FULLY POPULATED WITH REAL DATA) ===== -->
     <div class="showcase-grid">
+
+      <!-- ЧОРБИ – all 3 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=600&q=80" alt="Домашни Чорби" loading="lazy"></div>
@@ -752,6 +813,27 @@
           <div class="panel-item"><span class="panel-item-name">Чкембе Чорба</span><span class="panel-item-price">170 ден</span></div>
         </div>
       </div>
+
+      <!-- ПРЕДЈАДЕЊА & САЛАТИ – all 8 -->
+      <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
+        <div class="showcase-header">
+          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt="Свежи традиционални салати" loading="lazy"></div>
+          <div class="showcase-caption">Предјадења &amp; Салати</div>
+          <div class="click-hint"><span class="chevron">▾</span> Кликни за сите</div>
+        </div>
+        <div class="slide-panel">
+          <div class="panel-item"><span class="panel-item-name">Шопска Салата</span><span class="panel-item-price">180 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Печени Пиперки со Ајвар</span><span class="panel-item-price">150 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Тавче Гравче</span><span class="panel-item-price">200 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Зелка Салата</span><span class="panel-item-price">90 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Мешана Салата</span><span class="panel-item-price">160 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Пилешки Прсти (200г)</span><span class="panel-item-price">180 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Поховано Сирење</span><span class="panel-item-price">180 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Похована Даска (за 4 лица)</span><span class="panel-item-price">480 ден</span></div>
+        </div>
+      </div>
+
+      <!-- СКАРА – all 8 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80" alt="Скара на Жар" loading="lazy"></div>
@@ -769,23 +851,22 @@
           <div class="panel-item"><span class="panel-item-name">Свинско Ребро</span><span class="panel-item-price">260 ден</span></div>
         </div>
       </div>
+
+      <!-- ПРИЛОЗИ – all 3 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
-          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt="Свежи традиционални салати" loading="lazy"></div>
-          <div class="showcase-caption">Свежи Салати & Мезе</div>
-          <div class="click-hint"><span class="chevron">▾</span> Кликни за салати</div>
+          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1584724245729-4b0e8e04b36a?auto=format&fit=crop&w=600&q=80" alt="Прилози" loading="lazy"></div>
+          <div class="showcase-caption">Прилози &amp; Леб</div>
+          <div class="click-hint"><span class="chevron">▾</span> Кликни за прилози</div>
         </div>
         <div class="slide-panel">
-          <div class="panel-item"><span class="panel-item-name">Шопска Салата</span><span class="panel-item-price">180 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Печени Пиперки со Ајвар</span><span class="panel-item-price">150 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Тавче Гравче</span><span class="panel-item-price">200 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Зелка Салата</span><span class="panel-item-price">90 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Мешана Салата</span><span class="panel-item-price">160 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Пилешки Прсти (200г)</span><span class="panel-item-price">180 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Поховано Сирење</span><span class="panel-item-price">180 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Похована Даска (за 4 лица)</span><span class="panel-item-price">480 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Домашен Помфрит</span><span class="panel-item-price">120 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Домашно Лепче</span><span class="panel-item-price">60 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Фурнаринки</span><span class="panel-item-price">70 ден</span></div>
         </div>
       </div>
+
+      <!-- ПИЈАЛАЦИ – all 11 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1624216503641-ab4a72cada46?auto=format&fit=crop&w=600&q=80" alt="Пијалаци" loading="lazy"></div>
@@ -806,22 +887,12 @@
           <div class="panel-item"><span class="panel-item-name">Домашна Лимонада</span><span class="panel-item-price">120 ден</span></div>
         </div>
       </div>
-      <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
-        <div class="showcase-header">
-          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1676014959543-81df1079b423?auto=format&fit=crop&w=600&q=80" alt="Домашни Десерти" loading="lazy"></div>
-          <div class="showcase-caption">Домашни Десерти</div>
-          <div class="click-hint"><span class="chevron">▾</span> Кликни за десерти</div>
-        </div>
-        <div class="slide-panel">
-          <div class="panel-item"><span class="panel-item-name">Домашна Баклава</span><span class="panel-item-price">160 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Тулумби (3 парчиња)</span><span class="panel-item-price">130 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Палачинки со Еурокрем & Ореви</span><span class="panel-item-price">150 ден</span></div>
-        </div>
-      </div>
+
+      <!-- КАФЕ & ТОПЛИ ПИЈАЛАЦИ – all 8 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80" alt="Кафе и топли пијалаци" loading="lazy"></div>
-          <div class="showcase-caption">Кафе & Топли Пијалаци</div>
+          <div class="showcase-caption">Кафе &amp; Топли Пијалаци</div>
           <div class="click-hint"><span class="chevron">▾</span> Кликни за кафе мени</div>
         </div>
         <div class="slide-panel">
@@ -835,407 +906,202 @@
           <div class="panel-item"><span class="panel-item-name">Топло Чоколадо</span><span class="panel-item-price">140 ден</span></div>
         </div>
       </div>
+
+      <!-- ДЕСЕРТИ – all 3 -->
+      <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
+        <div class="showcase-header">
+          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1676014959543-81df1079b423?auto=format&fit=crop&w=600&q=80" alt="Домашни Десерти" loading="lazy"></div>
+          <div class="showcase-caption">Домашни Десерти</div>
+          <div class="click-hint"><span class="chevron">▾</span> Кликни за десерти</div>
+        </div>
+        <div class="slide-panel">
+          <div class="panel-item"><span class="panel-item-name">Домашна Баклава</span><span class="panel-item-price">160 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Тулумби (3 парчиња)</span><span class="panel-item-price">130 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Палачинки со Еурокрем &amp; Ореви</span><span class="panel-item-price">150 ден</span></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- MAIN MENU -->
     <div class="menu-container">
       <!-- COLUMN 1 -->
       <div class="menu-sheet">
-        <div class="section-title"><span class="flame-icon">🔥</span> ЧОРБИ (ТРАДИЦИОНАЛНИ)</div>
+        <div class="section-title" id="section-soups"><span class="flame-icon">🔥</span> ЧОРБИ (ТРАДИЦИОНАЛНИ)</div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Телешка Чорба</span>
-            <span class="item-dots"></span>
-            <span class="item-price">160 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Телешка Чорба</span><span class="item-dots"></span><span class="item-price">160 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Богата домашна чорба со крето телешко месо и свеж зеленчук.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Пилешка Чорба</span>
-            <span class="item-dots"></span>
-            <span class="item-price">140 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Пилешка Чорба</span><span class="item-dots"></span><span class="item-price">140 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Традиционално приготвена со сочно пилешко и зачини.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Чкембе Чорба</span>
-            <span class="item-dots"></span>
-            <span class="item-price">170 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Чкембе Чорба</span><span class="item-dots"></span><span class="item-price">170 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Класична густа чорба сервирана со лук, оцет и лута пиперка.</p>
         </div>
 
-        <div class="section-title"><span class="flame-icon">🔥</span> ПРЕДЈАДЕЊА & САЛАТИ</div>
+        <div class="section-title" id="section-starters"><span class="flame-icon">🔥</span> ПРЕДЈАДЕЊА &amp; САЛАТИ</div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Шопска Салата</span>
-            <span class="item-dots"></span>
-            <span class="item-price">180 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Шопска Салата</span><span class="item-dots"></span><span class="item-price">180 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Свеж домат, краставица, кромид и рендано домашно бело сирење.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Печени Пиперки со Ајвар</span>
-            <span class="item-dots"></span>
-            <span class="item-price">150 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Печени Пиперки со Ајвар</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Печени пиперки на жар сервирани со домашен ајвар.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Тавче Гравче</span>
-            <span class="item-dots"></span>
-            <span class="item-price">200 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Тавче Гравче</span><span class="item-dots"></span><span class="item-price">200 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Традиционално печен грав во земјена тава со запечена црвена пиперка.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Зелка Салата</span>
-            <span class="item-dots"></span>
-            <span class="item-price">90 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Зелка Салата</span><span class="item-dots"></span><span class="item-price">90 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Свежа зелка со домашен прелив.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Мешана Салата</span>
-            <span class="item-dots"></span>
-            <span class="item-price">160 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Мешана Салата</span><span class="item-dots"></span><span class="item-price">160 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Свежа мешана салата со сезонски зеленчук.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Пилешки Прсти (200г)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">180 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Пилешки Прсти (200г)</span><span class="item-dots"></span><span class="item-price">180 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Хрскави пилешки прсти со сос.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Поховано Сирење</span>
-            <span class="item-dots"></span>
-            <span class="item-price">180 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Поховано Сирење</span><span class="item-dots"></span><span class="item-price">180 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Хрскаво поховано сирење.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Похована Даска (за 4 лица)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">480 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Похована Даска (за 4 лица)</span><span class="item-dots"></span><span class="item-price">480 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Поховани зденки, печурки, пилешки прсти, сервирани со тартар сос.</p>
         </div>
 
-        <div class="section-title"><span class="flame-icon">🔥</span> СКАРА НА ЌУМУР</div>
+        <div class="section-title" id="section-grill"><span class="flame-icon">🔥</span> СКАРА НА ЌУМУР</div>
         <div class="chef-box" data-category="main">
           <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=300&q=80" alt="Мешано месо" class="chef-img" loading="lazy">
           <div class="chef-details">
             <div class="chef-tag">ПРЕПОРАКА ОД ШЕФОТ</div>
-            <div class="item-top">
-              <span class="item-name">Мешана Скара „Мојата Кафана“</span>
-              <span class="item-dots"></span>
-              <span class="item-price">650 ден</span>
-              <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-            </div>
+            <div class="item-top"><span class="item-name">Мешана Скара „Мојата Кафана“</span><span class="item-dots"></span><span class="item-price">650 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
             <p class="item-desc">Ќебапи, свински ражнич, пилешко и кашкавалска колбаса со печен зеленчук.</p>
           </div>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Ќебапи (10 парчиња) <span class="badge badge-popular">ПОПУЛАРНО</span></span>
-            <span class="item-dots"></span>
-            <span class="item-price">280 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Ќебапи (10 парчиња) <span class="badge badge-popular">ПОПУЛАРНО</span></span><span class="item-dots"></span><span class="item-price">280 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Традиционално мелено месо, сервирани со кромид и топол сомун.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Шарска Плескавица <span class="badge badge-special">СПЕЦИЈАЛИТЕТ</span></span>
-            <span class="item-dots"></span>
-            <span class="item-price">340 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Шарска Плескавица <span class="badge badge-special">СПЕЦИЈАЛИТЕТ</span></span><span class="item-dots"></span><span class="item-price">340 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Сочна плескавица полнета со растопен кашкавал.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Свински Врат на Жар</span>
-            <span class="item-dots"></span>
-            <span class="item-price">320 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Свински Врат на Жар</span><span class="item-dots"></span><span class="item-price">320 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Печен на дрвен ќумур, мариниран 24 часа.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Пилешки Уштипци</span>
-            <span class="item-dots"></span>
-            <span class="item-price">290 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Пилешки Уштипци</span><span class="item-dots"></span><span class="item-price">290 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Зачинети пилешки залаци со кашкавал и сланина.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Пилешки Стек</span>
-            <span class="item-dots"></span>
-            <span class="item-price">200 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Пилешки Стек</span><span class="item-dots"></span><span class="item-price">200 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Сочен пилешки стек на скара.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Пилешки Батак</span>
-            <span class="item-dots"></span>
-            <span class="item-price">250 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Пилешки Батак</span><span class="item-dots"></span><span class="item-price">250 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Печен пилешки батак на жар.</p>
         </div>
         <div class="menu-item" data-category="main">
-          <div class="item-top">
-            <span class="item-name">Свинско Ребро</span>
-            <span class="item-dots"></span>
-            <span class="item-price">260 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Свинско Ребро</span><span class="item-dots"></span><span class="item-price">260 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Печено свинско ребро на жар.</p>
         </div>
       </div>
 
       <!-- COLUMN 2 -->
       <div class="menu-sheet">
-        <div class="section-title"><span class="flame-icon">🔥</span> ПРИЛОЗИ & ФУРИНСКИ ЛЕБ</div>
+        <div class="section-title" id="section-sides"><span class="flame-icon">🔥</span> ПРИЛОЗИ &amp; ФУРИНСКИ ЛЕБ</div>
         <div class="menu-item" data-category="side">
-          <div class="item-top">
-            <span class="item-name">Домашен Помфрит</span>
-            <span class="item-dots"></span>
-            <span class="item-price">120 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Домашен Помфрит</span><span class="item-dots"></span><span class="item-price">120 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Рачно сечен свеж компир печен до златна боја.</p>
         </div>
         <div class="menu-item" data-category="side">
-          <div class="item-top">
-            <span class="item-name">Домашно Лепче</span>
-            <span class="item-dots"></span>
-            <span class="item-price">60 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Домашно Лепче</span><span class="item-dots"></span><span class="item-price">60 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Топол сомун потпечен на скара со путер.</p>
         </div>
         <div class="menu-item" data-category="side">
-          <div class="item-top">
-            <span class="item-name">Фурнаринки</span>
-            <span class="item-dots"></span>
-            <span class="item-price">70 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Фурнаринки</span><span class="item-dots"></span><span class="item-price">70 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Топли мали лепчиња од фурна.</p>
         </div>
 
-        <div class="section-title"><span class="flame-icon">🔥</span> ПИЈАЛАЦИ</div>
+        <div class="section-title" id="section-drinks"><span class="flame-icon">🔥</span> ПИЈАЛАЦИ</div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Домашна Жолта Ракија (0.05l)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">100 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Домашна Жолта Ракија (0.05l)</span><span class="item-dots"></span><span class="item-price">100 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Узо (0.05l)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">120 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Узо (0.05l)</span><span class="item-dots"></span><span class="item-price">120 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Домашно Црвено Вино (чаша)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">150 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Домашно Црвено Вино (чаша)</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Домашно Бело Вино (чаша)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">150 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Домашно Бело Вино (чаша)</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Скопско Пиво (0.5l)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">140 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Скопско Пиво (0.5l)</span><span class="item-dots"></span><span class="item-price">140 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Златен Даб (0.5l)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">140 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Златен Даб (0.5l)</span><span class="item-dots"></span><span class="item-price">140 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Туборг Пиво (0.5l)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">160 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Туборг Пиво (0.5l)</span><span class="item-dots"></span><span class="item-price">160 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Хајнекен Пиво (0.5l)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">160 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Хајнекен Пиво (0.5l)</span><span class="item-dots"></span><span class="item-price">160 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Газирани Сокови</span>
-            <span class="item-dots"></span>
-            <span class="item-price">90 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Газирани Сокови</span><span class="item-dots"></span><span class="item-price">90 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Минерална Вода (0.75l)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">100 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Минерална Вода (0.75l)</span><span class="item-dots"></span><span class="item-price">100 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Домашна Лимонада</span>
-            <span class="item-dots"></span>
-            <span class="item-price">120 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Домашна Лимонада</span><span class="item-dots"></span><span class="item-price">120 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
 
-        <div class="section-title"><span class="flame-icon">☕</span> КАФЕ & ТОПЛИ ПИЈАЛАЦИ</div>
+        <div class="section-title" id="section-coffee"><span class="flame-icon">☕</span> КАФЕ &amp; ТОПЛИ ПИЈАЛАЦИ</div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Турско Кафе</span>
-            <span class="item-dots"></span>
-            <span class="item-price">60 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Турско Кафе</span><span class="item-dots"></span><span class="item-price">60 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Макијато (топло)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">80 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Макијато (топло)</span><span class="item-dots"></span><span class="item-price">80 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Макијато (ладно)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">80 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Макијато (ладно)</span><span class="item-dots"></span><span class="item-price">80 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Капучино</span>
-            <span class="item-dots"></span>
-            <span class="item-price">80 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Капучино</span><span class="item-dots"></span><span class="item-price">80 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Капучино со Ирски Крем</span>
-            <span class="item-dots"></span>
-            <span class="item-price">90 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Капучино со Ирски Крем</span><span class="item-dots"></span><span class="item-price">90 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Еспресо</span>
-            <span class="item-dots"></span>
-            <span class="item-price">60 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Еспресо</span><span class="item-dots"></span><span class="item-price">60 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Еспресо продолжено</span>
-            <span class="item-dots"></span>
-            <span class="item-price">70 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Еспресо продолжено</span><span class="item-dots"></span><span class="item-price">70 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top">
-            <span class="item-name">Топло Чоколадо</span>
-            <span class="item-dots"></span>
-            <span class="item-price">140 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Топло Чоколадо</span><span class="item-dots"></span><span class="item-price">140 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
 
-        <div class="section-title"><span class="flame-icon">🔥</span> ДЕСЕРТИ</div>
+        <div class="section-title" id="section-desserts"><span class="flame-icon">🔥</span> ДЕСЕРТИ</div>
         <div class="menu-item" data-category="dessert">
-          <div class="item-top">
-            <span class="item-name">Домашна Баклава</span>
-            <span class="item-dots"></span>
-            <span class="item-price">160 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Домашна Баклава</span><span class="item-dots"></span><span class="item-price">160 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Традиционална баклава со ореви и шербет.</p>
         </div>
         <div class="menu-item" data-category="dessert">
-          <div class="item-top">
-            <span class="item-name">Тулумби (3 парчиња)</span>
-            <span class="item-dots"></span>
-            <span class="item-price">130 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Тулумби (3 парчиња)</span><span class="item-dots"></span><span class="item-price">130 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Сочни домашни тулумби.</p>
         </div>
         <div class="menu-item" data-category="dessert">
-          <div class="item-top">
-            <span class="item-name">Палачинки со Еурокрем & Ореви</span>
-            <span class="item-dots"></span>
-            <span class="item-price">150 ден</span>
-            <button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button>
-          </div>
+          <div class="item-top"><span class="item-name">Палачинки со Еурокрем &amp; Ореви</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
       </div>
     </div>
@@ -1254,9 +1120,7 @@
       </div>
     </div>
     <div class="cart-panel" id="cartPanel">
-      <!-- Waiter summary (hidden by default, shown inline) -->
       <div id="waiterSummary"></div>
-      <!-- Cart lines -->
       <div id="cartLines"></div>
       <div class="cart-actions">
         <button class="cart-action-btn cart-action-clear" onclick="clearOrder()">Избриши нарачка</button>
@@ -1337,15 +1201,12 @@
       void btn.offsetWidth;
       btn.classList.add('just-added');
 
-      // ---- UPSELL LOGIC ----
       if (category === 'main') {
-        console.log('🔥 Main item added – setting pending upsell for sides');
         const availSides = SIDE_SUGGESTIONS.filter(s => !isInCart(s.name));
         if (availSides.length > 0) {
           pendingUpsell = { options: availSides, header: "Сакате прилог со главното јадење? Изберете:" };
         }
       } else if (category === 'dessert') {
-        console.log('🍰 Dessert added – setting pending upsell for drinks');
         const specific = DRINK_PAIRING[name];
         let options = [];
         if (specific && !isInCart(specific.name)) options.push(specific);
@@ -1359,7 +1220,6 @@
     // ---- UPSELL UI ----
     function showUpsell(options, headerText) {
       if (upsellShowing) return;
-      console.log('📢 Showing upsell toast:', headerText);
       upsellText.innerHTML = headerText;
       upsellActions.innerHTML = '';
       options.forEach(opt => {
@@ -1410,7 +1270,6 @@
 
     // ---- CART RENDER ----
     function renderCart() {
-      // Hide waiter summary and show cart lines when cart changes
       closeWaiterSummary();
 
       const names = Object.keys(cart);
@@ -1466,11 +1325,9 @@
     function toggleCart() {
       const isExpanded = cartBar.classList.contains('expanded');
       if (!isExpanded) {
-        console.log('🛒 Cart opened – checking for pending upsell');
         cartBar.classList.add('expanded');
         if (upsellShowTimeout) { clearTimeout(upsellShowTimeout); upsellShowTimeout = null; }
         if (pendingUpsell && !upsellShowing) {
-          console.log('⏳ Starting 5s timer for upsell');
           upsellShowTimeout = setTimeout(() => {
             if (pendingUpsell && !upsellShowing && cartBar.classList.contains('expanded')) {
               showUpsell(pendingUpsell.options, pendingUpsell.header);
@@ -1478,21 +1335,16 @@
             }
             upsellShowTimeout = null;
           }, 5000);
-        } else {
-          console.log('ℹ️ No pending upsell or toast already showing');
         }
       } else {
         cartBar.classList.remove('expanded');
         if (upsellShowTimeout) { clearTimeout(upsellShowTimeout); upsellShowTimeout = null; }
-        console.log('🛒 Cart closed');
-        // Reset waiter view if open
         closeWaiterSummary();
       }
     }
 
-    // ---- WAITER SUMMARY (inline on screen) ----
+    // ---- WAITER SUMMARY ----
     window.showToWaiter = function() {
-      console.log('👨‍🍳 Покажи на келнерот clicked');
       const names = Object.keys(cart);
       if (names.length === 0) {
         alert('Нарачката е празна. Додајте нешто прво.');
@@ -1514,19 +1366,16 @@
       waiterSummary.style.display = 'block';
       cartLines.style.display = 'none';
       cartBar.classList.add('expanded');
-      console.log('✅ Order summary shown inline');
     };
 
     window.closeWaiterSummary = function() {
       waiterSummary.style.display = 'none';
       waiterSummary.innerHTML = '';
       cartLines.style.display = 'block';
-      console.log('🔙 Waiter summary closed');
     };
 
     // ---- BUTTONS: DELETE ----
     window.clearOrder = function() {
-      console.log('🗑️ Избриши нарачка clicked');
       if (Object.keys(cart).length === 0) {
         alert('Нарачката е веќе празна.');
         return;
@@ -1538,7 +1387,6 @@
       dismissUpsell();
       closeWaiterSummary();
       renderCart();
-      console.log('✅ Cart cleared');
     };
 
     // ---- WELCOME OVERLAY ----
@@ -1555,7 +1403,7 @@
     });
     document.addEventListener('keydown', dismissWelcome);
 
-    // ---- PANEL TOGGLE (collapsible cards) ----
+    // ---- PANEL TOGGLE ----
     document.querySelectorAll('.showcase-card').forEach(card => {
       const header = card.querySelector('.showcase-header');
       header.addEventListener('click', function(e) {
@@ -1580,6 +1428,38 @@
 
     // ---- CART HEADER TOGGLE ----
     document.getElementById('cartHeader').addEventListener('click', toggleCart);
+
+    // ---- CATEGORY RIBBON NAVIGATION ----
+    document.querySelectorAll('.category-ribbon .cat-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.dataset.target;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        document.querySelectorAll('.category-ribbon .cat-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // ---- ACTIVE CATEGORY ON SCROLL ----
+    const sections = document.querySelectorAll('.section-title');
+    const observerOptions = { root: null, rootMargin: '0px 0px -50% 0px', threshold: 0 };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          document.querySelectorAll('.category-ribbon .cat-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.target === id) {
+              btn.classList.add('active');
+            }
+          });
+        }
+      });
+    }, observerOptions);
+    sections.forEach(section => observer.observe(section));
 
     // ---- FALLBACK EVENT LISTENERS ----
     document.addEventListener('DOMContentLoaded', function() {
