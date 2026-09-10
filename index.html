@@ -6,7 +6,7 @@
   <title>Мојата Кафана - Мени</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Marcellus&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Marcellus&family=Noto+Serif:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     /* ----- DARK THEME (GitHub-style) ----- */
     :root {
@@ -17,16 +17,39 @@
       --text-muted: #8b949e;
       --card-bg: #21262d;
       --border-color: #30363d;
+
+      /* ----- TYPE SYSTEM -----
+         Three families, each with one job:
+           display -> restaurant name, section titles, prices, totals
+           label   -> eyebrows, chips, buttons (uppercase, letterspaced)
+           body    -> dish names and descriptions
+           ui      -> cart chrome, counters, small print                */
+      --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+      --font-label: 'Marcellus', Georgia, 'Times New Roman', serif;
+      --font-body: 'Noto Serif', Georgia, 'Times New Roman', serif;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+      --fs-hero: clamp(2rem, 7.5vw, 2.8rem);
+      --fs-modal-title: clamp(1.35rem, 5.6vw, 1.7rem);
+      --fs-section: clamp(1.25rem, 5.2vw, 1.45rem);
+      --fs-item: clamp(1rem, 4vw, 1.08rem);
+      --fs-desc: clamp(0.88rem, 3.4vw, 0.94rem);
+      --fs-meta: clamp(0.78rem, 3vw, 0.85rem);
+      --fs-eyebrow: clamp(0.66rem, 2.7vw, 0.74rem);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font-ui);
       background-color: var(--bg-dark);
       color: var(--text-light);
       min-height: 100vh;
       padding: 20px 12px 130px 12px;
       overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
     }
+    /* The welcome overlay sets this — without it the menu scrolls behind the splash. */
+    body.locked, body.modal-open { overflow: hidden; }
     .main-wrapper { max-width: 1200px; margin: 0 auto; }
 
     /* ----- TOP SLIDER / PHONE BAR ----- */
@@ -47,12 +70,13 @@
     .top-slider .phone {
       color: var(--accent-gold);
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       letter-spacing: 1px;
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-display);
     }
     .top-slider .label {
       color: var(--text-muted);
+      font-size: var(--fs-meta);
     }
     .top-slider .divider {
       color: var(--border-color);
@@ -68,25 +92,29 @@
       border: 1px solid var(--border-color);
     }
     .sub-subtitle {
-      font-family: 'Marcellus', serif;
-      font-size: 0.75rem;
-      letter-spacing: 2px;
+      font-family: var(--font-label);
+      font-size: var(--fs-eyebrow);
+      letter-spacing: 3px;
       color: var(--accent-gold);
       text-transform: uppercase;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     .main-title {
-      font-family: 'Cinzel', serif;
-      font-size: 2.2rem;
+      font-family: var(--font-display);
+      font-size: var(--fs-hero);
       font-weight: 800;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
+      line-height: 1.1;
       color: var(--text-light);
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     .main-subtitle {
-      font-size: 0.9rem;
-      font-style: italic;
+      font-family: var(--font-body);
+      font-size: var(--fs-desc);
+      line-height: 1.5;
       color: var(--text-muted);
+      max-width: 34ch;
+      margin: 0 auto;
     }
 
     /* ----- CATEGORY RIBBON (sticky) ----- */
@@ -110,10 +138,11 @@
     .category-ribbon::-webkit-scrollbar { display: none; }
     .category-ribbon .cat-btn {
       flex: 0 0 auto;
-      padding: 6px 14px;
-      font-family: 'Marcellus', serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.5px;
+      padding: 10px 16px;
+      min-height: 40px;
+      font-family: var(--font-label);
+      font-size: var(--fs-meta);
+      letter-spacing: 0.8px;
       text-transform: uppercase;
       color: var(--text-muted);
       background: transparent;
@@ -141,8 +170,7 @@
         margin-bottom: 16px;
       }
       .category-ribbon .cat-btn {
-        font-size: 0.7rem;
-        padding: 5px 12px;
+        padding: 9px 14px;
       }
     }
 
@@ -182,24 +210,26 @@
     }
     .showcase-card:hover .showcase-image-box img { filter: brightness(1) contrast(1.1); }
     .showcase-caption {
-      margin-top: 8px;
-      font-family: 'Marcellus', serif;
-      font-size: 0.8rem;
-      font-weight: 600;
+      margin-top: 10px;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
       color: var(--text-light);
-      letter-spacing: 0.8px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
+      line-height: 1.25;
     }
     .click-hint {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
-      font-size: 0.65rem;
+      font-family: var(--font-label);
+      font-size: var(--fs-eyebrow);
       color: var(--accent-gold);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 4px;
+      letter-spacing: 1.4px;
+      margin-top: 6px;
     }
     .click-hint .chevron { display: inline-block; transition: transform .35s; font-size: 0.6rem; }
     .showcase-card.active .click-hint .chevron { transform: rotate(180deg); }
@@ -222,8 +252,9 @@
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      font-size: 0.82rem;
-      padding: 7px 6px;
+      gap: 10px;
+      font-size: var(--fs-meta);
+      padding: 9px 6px;
       margin: 0 -6px;
       border-radius: 4px;
       border-bottom: 1px dotted var(--border-color);
@@ -231,12 +262,13 @@
     }
     .panel-item:last-child { border-bottom: none; }
     .panel-item:hover { background: rgba(243,186,47,0.08); padding-left: 10px; }
-    .panel-item-name { color: var(--text-light); font-weight: 600; }
-    .panel-item-price { color: var(--accent-gold); font-weight: 700; }
+    .panel-item-name { font-family: var(--font-body); color: var(--text-light); font-weight: 600; }
+    .panel-item-price { font-family: var(--font-display); color: var(--accent-gold); font-weight: 700; white-space: nowrap; }
 
     /* MAIN MENU */
     .menu-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .menu-sheet {
+      min-width: 0;   /* a grid item defaults to min-content, which overflows narrow phones */
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 6px;
@@ -246,17 +278,26 @@
 
     .section-title {
       position: relative;
-      font-family: 'Cinzel', serif;
-      font-size: 1.15rem;
+      font-family: var(--font-display);
+      font-size: var(--fs-section);
+      font-weight: 700;
       color: var(--accent-gold);
-      letter-spacing: 1px;
-      margin-top: 8px;
-      margin-bottom: 25px;
+      letter-spacing: 1.5px;
+      line-height: 1.2;
+      margin-top: 42px;
+      margin-bottom: 22px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding-bottom: 9px;
+      gap: 10px;
+      padding-bottom: 11px;
       scroll-margin-top: 90px;
+    }
+    .menu-sheet > .section-title:first-child { margin-top: 8px; }
+    /* Brief gold pulse when a suggestion sends the guest to a section. */
+    .section-title.flash { animation: section-flash 1.8s ease; }
+    @keyframes section-flash {
+      0%, 100% { text-shadow: none; }
+      20%, 60% { text-shadow: 0 0 18px rgba(243,186,47,0.85); }
     }
     .section-title::after {
       content: '';
@@ -273,8 +314,27 @@
       70% { transform: scale(0.96) rotate(2deg); filter: drop-shadow(0 0 3px #d49a1a); }
     }
 
+    /* Group heading inside a section (e.g. red vs white wine). */
+    .subsection-label {
+      font-family: var(--font-label);
+      font-size: var(--fs-eyebrow);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 26px 0 14px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .wine-note {
+      font-family: var(--font-body);
+      font-size: var(--fs-desc);
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
     .menu-item {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       padding: 4px 0;
       border-radius: 4px;
       transition: background 0.2s;
@@ -288,46 +348,56 @@
       gap: 8px;
     }
     .item-name {
+      font-family: var(--font-body);
       font-weight: 700;
-      font-size: 0.92rem;
+      font-size: var(--fs-item);
+      line-height: 1.3;
       color: var(--text-light);
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 6px;
       flex-shrink: 1;
+      min-width: 0;
+      overflow-wrap: break-word;
     }
     .item-dots {
       flex-grow: 1;
       border-bottom: 1px dotted var(--border-color);
-      margin: 0 4px;
+      margin: 0 6px;
       position: relative;
       top: -2px;
+      min-width: 12px;
     }
     .item-price {
+      font-family: var(--font-display);
       font-weight: 700;
-      font-size: 0.92rem;
+      font-size: var(--fs-item);
       color: var(--accent-gold);
       white-space: nowrap;
       flex-shrink: 0;
     }
     .item-desc {
-      font-size: 0.8rem;
+      font-family: var(--font-body);
+      font-size: var(--fs-desc);
       color: var(--text-muted);
-      margin-top: 2px;
-      line-height: 1.35;
+      margin-top: 5px;
+      line-height: 1.55;
       padding-right: 52px;
     }
     .badge {
+      font-family: var(--font-ui);
       font-size: 0.6rem;
-      padding: 2px 5px;
+      padding: 3px 6px;
       border-radius: 3px;
       text-transform: uppercase;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
+      white-space: nowrap;
     }
     .badge-popular { background: #c62828; color: #fff; }
     .badge-special { background: #e65100; color: #fff; }
+    .badge-fish { background: #1f6feb; color: #fff; }
 
     .chef-box {
       margin-top: 12px;
@@ -342,31 +412,32 @@
       align-items: center;
     }
     .chef-img {
-      width: 75px;
-      height: 65px;
+      width: 84px;
+      height: 74px;
       border-radius: 4px;
       object-fit: cover;
       border: 1px solid var(--border-color);
       flex-shrink: 0;
     }
-    .chef-details { flex-grow: 1; }
+    .chef-details { flex-grow: 1; min-width: 0; }
     .chef-tag {
-      font-size: 0.65rem;
+      font-family: var(--font-label);
+      font-size: var(--fs-eyebrow);
       color: var(--accent-gold);
-      letter-spacing: 1px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       font-weight: 700;
-      margin-bottom: 2px;
+      margin-bottom: 5px;
     }
 
     /* ADD TO CART BUTTON */
     .add-to-cart-btn {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       padding: 0;
       flex-shrink: 0;
-      font-family: 'Marcellus', serif;
-      font-size: 1.4rem;
+      font-family: var(--font-label);
+      font-size: 1.5rem;
       line-height: 1;
       color: var(--accent-gold);
       background: transparent;
@@ -405,7 +476,7 @@
       border: 1px solid var(--border-color);
       border-radius: 12px;
       box-shadow: 0 -4px 24px rgba(0,0,0,0.7), 0 0 20px rgba(243,186,47,0.1);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: var(--font-ui);
       overflow: hidden;
       transition: transform .25s;
     }
@@ -429,17 +500,18 @@
       100% { transform: scale(1) rotate(0); }
     }
     .cart-bar-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      letter-spacing: 0.5px;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
       color: var(--text-light);
     }
-    .cart-bar-count { font-size: 0.72rem; color: var(--text-muted); }
+    .cart-bar-count { font-size: 0.76rem; color: var(--text-muted); }
     .cart-bar-right { display: flex; align-items: center; gap: 10px; }
     .cart-bar-total {
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-display);
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 1.15rem;
       color: var(--accent-gold);
       white-space: nowrap;
     }
@@ -452,7 +524,7 @@
       border-top: 1px solid transparent;
     }
     .cart-bar.expanded .cart-panel {
-      max-height: 400px;
+      max-height: min(420px, 50vh);
       border-top: 1px solid var(--border-color);
     }
     .cart-empty-msg {
@@ -470,7 +542,7 @@
       padding: 8px 16px;
       border-bottom: 1px dotted var(--border-color);
     }
-    .cart-line-name { flex: 1; font-size: 0.82rem; color: var(--text-light); }
+    .cart-line-name { flex: 1; font-family: var(--font-body); font-size: 0.88rem; line-height: 1.35; color: var(--text-light); }
     .cart-line-qty-controls {
       display: flex;
       align-items: center;
@@ -484,9 +556,9 @@
       background: none;
       border: none;
       color: var(--text-light);
-      font-size: 0.9rem;
-      width: 24px;
-      height: 24px;
+      font-size: 1.1rem;
+      width: 34px;
+      height: 34px;
       cursor: pointer;
       border-radius: 3px;
       transition: background .15s;
@@ -497,28 +569,32 @@
     .cart-line-qty-btn:hover { background: rgba(255,255,255,0.1); }
     .cart-line-qty-btn:active { transform: scale(0.9); }
     .cart-line-qty-num {
-      font-size: 0.8rem;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
       color: var(--accent-gold);
-      min-width: 20px;
+      min-width: 22px;
       text-align: center;
       font-weight: 700;
     }
     .cart-line-price {
-      font-size: 0.82rem;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
       font-weight: 700;
       color: var(--accent-gold);
       white-space: nowrap;
-      min-width: 65px;
+      min-width: 68px;
       text-align: right;
     }
     .cart-line-remove {
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 1rem;
+      font-size: 1.1rem;
       cursor: pointer;
       line-height: 1;
-      padding: 0 4px;
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
       transition: color .15s;
     }
     .cart-line-remove:hover { color: #e65100; }
@@ -531,10 +607,11 @@
     }
     .cart-action-btn {
       flex: 1;
-      padding: 9px 10px;
-      font-family: 'Marcellus', serif;
-      font-size: 0.75rem;
-      letter-spacing: 0.4px;
+      padding: 13px 10px;
+      min-height: 46px;
+      font-family: var(--font-label);
+      font-size: 0.82rem;
+      letter-spacing: 0.6px;
       text-transform: uppercase;
       border-radius: 5px;
       cursor: pointer;
@@ -560,143 +637,359 @@
     }
     .cart-action-waiter:hover { box-shadow: 0 0 14px rgba(243,186,47,0.5); }
 
-    /* UPSELL TOAST */
-    .upsell-toast {
+    /* ===== SUGGESTION MODAL =====
+       A guest holding a phone one-handed gets a bottom sheet they can reach;
+       on a tablet or laptop the same sheet centres itself. */
+    .suggest-overlay {
       position: fixed;
-      left: 20px;
-      right: 20px;
-      bottom: 130px;
-      max-width: 460px;
-      margin: 0 auto;
-      z-index: 95;
-      background: var(--card-bg);
-      border: 1px solid var(--accent-gold);
-      border-radius: 10px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.7), 0 0 18px rgba(243,186,47,0.15);
-      padding: 12px 14px;
-      opacity: 0;
-      transform: translateY(14px);
-      pointer-events: none;
-      transition: opacity .45s, transform .45s;
-    }
-    .upsell-toast.visible {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-    .upsell-text { font-size: 0.82rem; color: var(--text-light); line-height: 1.4; margin-bottom: 10px; }
-    .upsell-text strong { color: var(--accent-gold); }
-    .upsell-price { color: var(--accent-gold); font-weight: 700; }
-    .upsell-actions {
+      inset: 0;
+      z-index: 200;
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      align-items: flex-end;
       justify-content: center;
+      padding: 0;
+      background: rgba(3, 6, 10, 0.72);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .3s, visibility .3s;
     }
-    .upsell-option-btn {
-      padding: 6px 14px;
-      font-family: 'Marcellus', serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-      background: var(--accent-gold);
-      border: 1px solid var(--accent-gold);
-      color: var(--bg-dark);
-      border-radius: 5px;
-      cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
-      flex: 1 0 auto;
-      min-width: 80px;
-      font-weight: 700;
-    }
-    .upsell-option-btn:hover { transform: scale(1.04); box-shadow: 0 0 12px rgba(243,186,47,0.4); }
-    .upsell-option-btn:active { transform: scale(0.96); }
-    .upsell-dismiss-btn {
-      padding: 6px 14px;
-      font-family: 'Marcellus', serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.4px;
-      background: none;
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      border-radius: 5px;
-      cursor: pointer;
-      transition: color .15s, border-color .15s;
-      flex: 0 1 auto;
-    }
-    .upsell-dismiss-btn:hover { color: var(--text-light); border-color: var(--accent-gold); }
+    .suggest-overlay.visible { opacity: 1; visibility: visible; }
 
-    /* WAITER SUMMARY */
-    #waiterSummary {
-      display: none;
-      padding: 16px;
-      background: var(--bg-dark);
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.9rem;
+    .suggest-sheet {
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      max-height: 90dvh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: linear-gradient(180deg, #1b2129 0%, var(--card-bg) 45%, var(--bg-dark) 100%);
+      border: 1px solid var(--accent-gold);
+      border-bottom: none;
+      border-radius: 22px 22px 0 0;
+      box-shadow: 0 -12px 48px rgba(0,0,0,0.85), 0 0 34px rgba(243,186,47,0.16);
+      padding: 10px 20px calc(24px + env(safe-area-inset-bottom, 0px)) 20px;
+      transform: translateY(100%);
+      transition: transform .38s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    #waiterSummary .summary-header {
+    .suggest-overlay.visible .suggest-sheet { transform: translateY(0); }
+
+    /* Drag handle: signals "this sheet came up from the bottom, swipe it away". */
+    .suggest-grip {
+      width: 44px;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--border-color);
+      margin: 4px auto 16px auto;
+    }
+
+    .suggest-eyebrow {
+      font-family: var(--font-label);
+      font-size: var(--fs-eyebrow);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent-gold);
       text-align: center;
+      margin-bottom: 10px;
+    }
+    .suggest-title {
+      font-family: var(--font-display);
+      font-size: var(--fs-modal-title);
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: 0.5px;
+      color: var(--text-light);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .suggest-sub {
+      font-family: var(--font-body);
+      font-size: var(--fs-desc);
+      line-height: 1.55;
+      color: var(--text-muted);
+      text-align: center;
+      margin: 0 auto 22px auto;
+      max-width: 36ch;
+    }
+
+    .suggest-options { display: flex; flex-direction: column; gap: 10px; }
+    .suggest-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      min-height: 68px;
+      padding: 12px 14px;
+      text-align: left;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color .18s, background .18s, transform .12s;
+    }
+    .suggest-option:hover { border-color: var(--accent-gold); background: rgba(243,186,47,0.07); }
+    .suggest-option:active { transform: scale(0.985); }
+    .suggest-option-icon {
+      flex-shrink: 0;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      background: rgba(243,186,47,0.12);
+      border: 1px solid rgba(243,186,47,0.3);
+    }
+    .suggest-option-body { flex: 1; min-width: 0; }
+    .suggest-option-name {
+      display: block;
+      font-family: var(--font-body);
+      font-size: var(--fs-item);
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text-light);
+    }
+    .suggest-option-note {
+      display: block;
+      font-family: var(--font-body);
+      font-size: var(--fs-meta);
+      line-height: 1.45;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .suggest-option-price {
+      flex-shrink: 0;
+      font-family: var(--font-display);
+      font-size: var(--fs-item);
       font-weight: 700;
       color: var(--accent-gold);
-      font-size: 1.1rem;
-      margin-bottom: 12px;
-      letter-spacing: 1px;
+      white-space: nowrap;
+      text-align: right;
     }
-    #waiterSummary .summary-line {
+    .suggest-option-plus {
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      line-height: 1;
+      color: var(--accent-gold);
+      border: 2px solid var(--accent-gold);
+    }
+
+    /* "Take me to the wine list" — the browse-the-section escape hatch. */
+    .suggest-browse {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 52px;
+      margin-top: 16px;
+      padding: 13px 16px;
+      font-family: var(--font-label);
+      font-size: 0.86rem;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--bg-dark);
+      background: var(--accent-gold);
+      border: 1px solid var(--accent-gold);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: box-shadow .18s, transform .12s;
+    }
+    .suggest-browse:hover { box-shadow: 0 0 20px rgba(243,186,47,0.45); }
+    .suggest-browse:active { transform: scale(0.985); }
+
+    .suggest-dismiss {
+      display: block;
+      width: 100%;
+      min-height: 48px;
+      margin-top: 10px;
+      padding: 12px;
+      font-family: var(--font-label);
+      font-size: 0.82rem;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: color .18s, border-color .18s;
+    }
+    .suggest-dismiss:hover { color: var(--text-light); border-color: var(--text-muted); }
+
+    @media (min-width: 640px) {
+      .suggest-overlay { align-items: center; padding: 24px; }
+      .suggest-sheet {
+        border-radius: 18px;
+        border-bottom: 1px solid var(--accent-gold);
+        max-height: 86vh;
+        padding: 26px 30px 30px 30px;
+        transform: translateY(24px) scale(0.97);
+      }
+      .suggest-overlay.visible .suggest-sheet { transform: translateY(0) scale(1); }
+      .suggest-grip { display: none; }
+    }
+
+    /* ===== WAITER SUMMARY =====
+       Read across a table by someone standing up, so everything here is
+       deliberately a size or two larger than the rest of the menu. */
+    .waiter-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 210;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(3, 6, 10, 0.85);
+      -webkit-backdrop-filter: blur(5px);
+      backdrop-filter: blur(5px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .28s, visibility .28s;
+    }
+    .waiter-overlay.visible { opacity: 1; visibility: visible; }
+    .waiter-sheet {
+      width: 100%;
+      max-width: 560px;
+      max-height: 92vh;
+      max-height: 92dvh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg-dark);
+      border: 2px solid var(--accent-gold);
+      border-radius: 16px;
+      box-shadow: 0 12px 50px rgba(0,0,0,0.9), 0 0 34px rgba(243,186,47,0.2);
+      padding: 26px 22px calc(26px + env(safe-area-inset-bottom, 0px)) 22px;
+      transform: scale(0.96);
+      transition: transform .28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .waiter-overlay.visible .waiter-sheet { transform: scale(1); }
+
+    .summary-eyebrow {
+      font-family: var(--font-label);
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .summary-header {
+      font-family: var(--font-display);
+      text-align: center;
+      font-weight: 800;
+      color: var(--accent-gold);
+      font-size: clamp(1.6rem, 6.5vw, 2rem);
+      letter-spacing: 2px;
+      margin-bottom: 22px;
+    }
+    .summary-line {
       display: flex;
       justify-content: space-between;
-      padding: 4px 0;
+      align-items: baseline;
+      gap: 14px;
+      padding: 13px 0;
       border-bottom: 1px dotted var(--border-color);
     }
-    #waiterSummary .summary-total {
+    .summary-line-name {
+      font-family: var(--font-body);
+      font-size: clamp(1.1rem, 4.6vw, 1.3rem);
+      font-weight: 600;
+      line-height: 1.35;
+      color: var(--text-light);
+    }
+    .summary-line-qty {
+      color: var(--accent-gold);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .summary-line-price {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 4.6vw, 1.3rem);
+      font-weight: 700;
+      color: var(--accent-gold);
+      white-space: nowrap;
+    }
+    .summary-total {
       display: flex;
       justify-content: space-between;
-      font-weight: 700;
-      margin-top: 12px;
-      padding-top: 8px;
-      border-top: 2px solid var(--accent-gold);
+      align-items: baseline;
+      gap: 14px;
+      font-family: var(--font-display);
+      font-size: clamp(1.45rem, 6vw, 1.8rem);
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: var(--text-light);
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 3px solid var(--accent-gold);
     }
-    #waiterSummary .summary-back-btn {
-      margin-top: 12px;
+    .summary-total-value { color: var(--accent-gold); white-space: nowrap; }
+    .summary-note {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 18px;
+    }
+    .summary-back-btn {
+      margin-top: 20px;
       width: 100%;
-      padding: 8px;
+      min-height: 54px;
+      padding: 15px;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      border-radius: 5px;
+      color: var(--text-light);
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-family: var(--font-label);
+      font-size: 1rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
       transition: border-color 0.2s, color 0.2s;
     }
-    #waiterSummary .summary-back-btn:hover {
+    .summary-back-btn:hover {
       border-color: var(--accent-gold);
-      color: var(--text-light);
+      color: var(--accent-gold);
     }
 
     @media (max-width: 768px) {
-      .main-title { font-size: 1.8rem; }
       .menu-container { grid-template-columns: 1fr; gap: 12px; }
       .showcase-grid { grid-template-columns: 1fr; }
-      .showcase-image-box { height: 140px; }
+      .showcase-image-box { height: 150px; }
       .menu-sheet { padding: 18px 14px; }
       .cart-bar {
-        left: 8px; right: 8px; bottom: 8px;
+        left: 8px; right: 8px;
+        bottom: calc(8px + env(safe-area-inset-bottom, 0px));
         border-radius: 10px;
       }
-      .cart-bar.expanded .cart-panel { max-height: 200px; }
-      .upsell-toast {
-        left: 8px; right: 8px;
-        bottom: 110px;
-        max-width: none;
-      }
+      .cart-bar.expanded .cart-panel { max-height: 42vh; }
       .item-desc { padding-right: 0; }
-      .top-slider { font-size: 0.8rem; flex-direction: column; gap: 4px; }
-      body { padding-bottom: 130px; }
+      .top-slider { flex-direction: column; gap: 4px; }
+      body { padding-bottom: 150px; }
       .section-title {
-        font-size: 1rem;
-        margin-bottom: 20px;
+        margin-top: 34px;
+        margin-bottom: 18px;
         scroll-margin-top: 80px;
       }
+      .suggest-option { gap: 10px; padding: 12px 11px; }
+      .suggest-option-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+      .suggest-option-plus { width: 30px; height: 30px; font-size: 1.1rem; }
+    }
+    /* Very narrow phones: the price column is what gets squeezed first. */
+    @media (max-width: 360px) {
+      .suggest-option-icon { display: none; }
+      .suggest-sheet { padding-left: 15px; padding-right: 15px; }
     }
 
     /* WELCOME OVERLAY */
@@ -713,8 +1006,8 @@
     .welcome-content { max-width: 480px; animation: welcome-rise 1.1s ease both; }
     @keyframes welcome-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
     .welcome-eyebrow {
-      font-family: 'Marcellus', serif;
-      font-size: 0.7rem;
+      font-family: var(--font-label);
+      font-size: var(--fs-eyebrow);
       letter-spacing: 3px;
       color: var(--accent-gold);
       text-transform: uppercase;
@@ -722,27 +1015,28 @@
       text-shadow: 0 0 8px rgba(243,186,47,0.4);
     }
     .welcome-title {
-      font-family: 'Cinzel', serif;
+      font-family: var(--font-display);
       font-weight: 800;
-      font-size: 2rem;
-      line-height: 1.25;
+      font-size: var(--fs-hero);
+      line-height: 1.2;
+      letter-spacing: 1.5px;
       color: var(--text-light);
       text-shadow: 0 0 18px rgba(243,186,47,0.25), 3px 3px 6px #000;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
     .welcome-subtitle {
-      font-size: 0.92rem;
-      font-style: italic;
+      font-family: var(--font-body);
+      font-size: var(--fs-desc);
       color: var(--text-muted);
-      line-height: 1.5;
+      line-height: 1.6;
       margin-bottom: 34px;
     }
     .welcome-enter {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-family: 'Marcellus', serif;
-      font-size: 0.72rem;
+      font-family: var(--font-label);
+      font-size: 0.78rem;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--text-light);
@@ -791,7 +1085,9 @@
       <button class="cat-btn active" data-target="section-soups">Чорби</button>
       <button class="cat-btn" data-target="section-starters">Предјадења</button>
       <button class="cat-btn" data-target="section-grill">Скара</button>
+      <button class="cat-btn" data-target="section-fish">Риба</button>
       <button class="cat-btn" data-target="section-sides">Прилози</button>
+      <button class="cat-btn" data-target="section-wine">Вина</button>
       <button class="cat-btn" data-target="section-drinks">Пијалаци</button>
       <button class="cat-btn" data-target="section-coffee">Кафе</button>
       <button class="cat-btn" data-target="section-desserts">Десерти</button>
@@ -800,7 +1096,7 @@
     <!-- ===== SHOWCASE CARDS (FULLY POPULATED WITH REAL DATA) ===== -->
     <div class="showcase-grid">
 
-      <!-- ЧОРБИ – all 3 -->
+      <!-- ЧОРБИ – all 4 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=600&q=80" alt="Домашни Чорби" loading="lazy"></div>
@@ -811,10 +1107,11 @@
           <div class="panel-item"><span class="panel-item-name">Телешка Чорба</span><span class="panel-item-price">160 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Пилешка Чорба</span><span class="panel-item-price">140 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Чкембе Чорба</span><span class="panel-item-price">170 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Рибја Чорба</span><span class="panel-item-price">180 ден</span></div>
         </div>
       </div>
 
-      <!-- ПРЕДЈАДЕЊА & САЛАТИ – all 8 -->
+      <!-- ПРЕДЈАДЕЊА & САЛАТИ – all 10 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" alt="Свежи традиционални салати" loading="lazy"></div>
@@ -829,11 +1126,13 @@
           <div class="panel-item"><span class="panel-item-name">Мешана Салата</span><span class="panel-item-price">160 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Пилешки Прсти (200г)</span><span class="panel-item-price">180 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Поховано Сирење</span><span class="panel-item-price">180 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Кајмак со Топол Леб</span><span class="panel-item-price">170 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Похована Даска (за 4 лица)</span><span class="panel-item-price">480 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Мезе Плата „Кафанска“ (за 2 лица)</span><span class="panel-item-price">520 ден</span></div>
         </div>
       </div>
 
-      <!-- СКАРА – all 8 -->
+      <!-- СКАРА – all 11 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80" alt="Скара на Жар" loading="lazy"></div>
@@ -849,13 +1148,35 @@
           <div class="panel-item"><span class="panel-item-name">Пилешки Стек</span><span class="panel-item-price">200 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Пилешки Батак</span><span class="panel-item-price">250 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Свинско Ребро</span><span class="panel-item-price">260 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Ражнич Свински (2 парчиња)</span><span class="panel-item-price">300 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Кашкавалска Колбаса</span><span class="panel-item-price">270 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Јагнешко Печено (300г)</span><span class="panel-item-price">590 ден</span></div>
         </div>
       </div>
 
-      <!-- ПРИЛОЗИ – all 3 -->
+      <!-- РИБА – all 8 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
-          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1584724245729-4b0e8e04b36a?auto=format&fit=crop&w=600&q=80" alt="Прилози" loading="lazy"></div>
+          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80" alt="Свежа риба" loading="lazy"></div>
+          <div class="showcase-caption">Свежа Риба</div>
+          <div class="click-hint"><span class="chevron">▾</span> Кликни за рибно мени</div>
+        </div>
+        <div class="slide-panel">
+          <div class="panel-item"><span class="panel-item-name">Пастрмка на Скара (цела)</span><span class="panel-item-price">420 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Пастрмка во Фолија со Зеленчук</span><span class="panel-item-price">450 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Пржени Гирици (250г)</span><span class="panel-item-price">280 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Крап на Плоча</span><span class="panel-item-price">390 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Ослич Филе (пржен)</span><span class="panel-item-price">320 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Пржени Лигњи со Тартар</span><span class="panel-item-price">420 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Лосос Филе на Жар</span><span class="panel-item-price">560 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Рибна Плата „Езерска“ (за 2 лица)</span><span class="panel-item-price">950 ден</span></div>
+        </div>
+      </div>
+
+      <!-- ПРИЛОЗИ – all 5 -->
+      <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
+        <div class="showcase-header">
+          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80" alt="Прилози" loading="lazy"></div>
           <div class="showcase-caption">Прилози &amp; Леб</div>
           <div class="click-hint"><span class="chevron">▾</span> Кликни за прилози</div>
         </div>
@@ -863,10 +1184,33 @@
           <div class="panel-item"><span class="panel-item-name">Домашен Помфрит</span><span class="panel-item-price">120 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Домашно Лепче</span><span class="panel-item-price">60 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Фурнаринки</span><span class="panel-item-price">70 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Печурки на Жар</span><span class="panel-item-price">160 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Ориз со Зеленчук</span><span class="panel-item-price">110 ден</span></div>
         </div>
       </div>
 
-      <!-- ПИЈАЛАЦИ – all 11 -->
+      <!-- ВИНСКА КАРТА – all 10 -->
+      <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
+        <div class="showcase-header">
+          <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=600&q=80" alt="Винска карта" loading="lazy"></div>
+          <div class="showcase-caption">Винска Карта</div>
+          <div class="click-hint"><span class="chevron">▾</span> Кликни за сите вина</div>
+        </div>
+        <div class="slide-panel">
+          <div class="panel-item"><span class="panel-item-name">Домашно Црвено Вино (чаша)</span><span class="panel-item-price">150 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Т'га за Југ (чаша 0.2l)</span><span class="panel-item-price">180 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Вранец Барик (шише 0.75l)</span><span class="panel-item-price">1200 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Т'га за Југ (шише 0.75l)</span><span class="panel-item-price">890 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Кратошија (чаша 0.2l)</span><span class="panel-item-price">190 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Домашно Бело Вино (чаша)</span><span class="panel-item-price">150 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Темјаника (чаша 0.2l)</span><span class="panel-item-price">180 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Темјаника (шише 0.75l)</span><span class="panel-item-price">900 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Смедеревка (чаша 0.2l)</span><span class="panel-item-price">150 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Розе Вранец (чаша 0.2l)</span><span class="panel-item-price">170 ден</span></div>
+        </div>
+      </div>
+
+      <!-- ПИЈАЛАЦИ – all 10 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1624216503641-ab4a72cada46?auto=format&fit=crop&w=600&q=80" alt="Пијалаци" loading="lazy"></div>
@@ -876,8 +1220,7 @@
         <div class="slide-panel">
           <div class="panel-item"><span class="panel-item-name">Домашна Жолта Ракија (0.05l)</span><span class="panel-item-price">100 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Узо (0.05l)</span><span class="panel-item-price">120 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Домашно Црвено Вино (чаша)</span><span class="panel-item-price">150 ден</span></div>
-          <div class="panel-item"><span class="panel-item-name">Домашно Бело Вино (чаша)</span><span class="panel-item-price">150 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Мастика (0.05l)</span><span class="panel-item-price">120 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Скопско Пиво (0.5l)</span><span class="panel-item-price">140 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Златен Даб (0.5l)</span><span class="panel-item-price">140 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Туборг Пиво (0.5l)</span><span class="panel-item-price">160 ден</span></div>
@@ -907,7 +1250,7 @@
         </div>
       </div>
 
-      <!-- ДЕСЕРТИ – all 3 -->
+      <!-- ДЕСЕРТИ – all 5 -->
       <div class="showcase-card" role="button" tabindex="0" aria-expanded="false">
         <div class="showcase-header">
           <div class="showcase-image-box"><img src="https://images.unsplash.com/photo-1676014959543-81df1079b423?auto=format&fit=crop&w=600&q=80" alt="Домашни Десерти" loading="lazy"></div>
@@ -918,6 +1261,8 @@
           <div class="panel-item"><span class="panel-item-name">Домашна Баклава</span><span class="panel-item-price">160 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Тулумби (3 парчиња)</span><span class="panel-item-price">130 ден</span></div>
           <div class="panel-item"><span class="panel-item-name">Палачинки со Еурокрем &amp; Ореви</span><span class="panel-item-price">150 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Крем Пита</span><span class="panel-item-price">150 ден</span></div>
+          <div class="panel-item"><span class="panel-item-name">Ревани со Сладолед</span><span class="panel-item-price">170 ден</span></div>
         </div>
       </div>
 
@@ -939,6 +1284,10 @@
         <div class="menu-item" data-category="main">
           <div class="item-top"><span class="item-name">Чкембе Чорба</span><span class="item-dots"></span><span class="item-price">170 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Класична густа чорба сервирана со лук, оцет и лута пиперка.</p>
+        </div>
+        <div class="menu-item" data-category="main">
+          <div class="item-top"><span class="item-name">Рибја Чорба <span class="badge badge-fish">НОВО</span></span><span class="item-dots"></span><span class="item-price">180 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Густа чорба од речна риба со корен зеленчук и малку лута пиперка.</p>
         </div>
 
         <div class="section-title" id="section-starters"><span class="flame-icon">🔥</span> ПРЕДЈАДЕЊА &amp; САЛАТИ</div>
@@ -971,8 +1320,16 @@
           <p class="item-desc">Хрскаво поховано сирење.</p>
         </div>
         <div class="menu-item" data-category="main">
+          <div class="item-top"><span class="item-name">Кајмак со Топол Леб</span><span class="item-dots"></span><span class="item-price">170 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Домашен кајмак сервиран со топол леб директно од фурна.</p>
+        </div>
+        <div class="menu-item" data-category="main">
           <div class="item-top"><span class="item-name">Похована Даска (за 4 лица)</span><span class="item-dots"></span><span class="item-price">480 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Поховани зденки, печурки, пилешки прсти, сервирани со тартар сос.</p>
+        </div>
+        <div class="menu-item" data-category="main">
+          <div class="item-top"><span class="item-name">Мезе Плата „Кафанска“ (за 2 лица) <span class="badge badge-special">СПЕЦИЈАЛИТЕТ</span></span><span class="item-dots"></span><span class="item-price">520 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Домашна пршута, кашкавал, кајмак, маслинки, ајвар и печени пиперки.</p>
         </div>
 
         <div class="section-title" id="section-grill"><span class="flame-icon">🔥</span> СКАРА НА ЌУМУР</div>
@@ -1012,6 +1369,56 @@
           <div class="item-top"><span class="item-name">Свинско Ребро</span><span class="item-dots"></span><span class="item-price">260 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Печено свинско ребро на жар.</p>
         </div>
+        <div class="menu-item" data-category="main">
+          <div class="item-top"><span class="item-name">Ражнич Свински (2 парчиња)</span><span class="item-dots"></span><span class="item-price">300 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Свинско месо и зеленчук на дрвен ражен, печени на ќумур.</p>
+        </div>
+        <div class="menu-item" data-category="main">
+          <div class="item-top"><span class="item-name">Јагнешко Печено (300г)</span><span class="item-dots"></span><span class="item-price">590 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Полека печено младо јагнешко со печен компир и рузмарин.</p>
+        </div>
+        <div class="menu-item" data-category="main">
+          <div class="item-top"><span class="item-name">Кашкавалска Колбаса</span><span class="item-dots"></span><span class="item-price">270 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Домашна колбаса полнета со кашкавал, печена на жар.</p>
+        </div>
+
+        <div class="section-title" id="section-fish"><span class="flame-icon">🐟</span> РИБА &amp; МОРСКИ ПЛОДОВИ</div>
+        <div class="chef-box" data-category="fish">
+          <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=300&q=80" alt="Пастрмка на скара" class="chef-img" loading="lazy">
+          <div class="chef-details">
+            <div class="chef-tag">СВЕЖО СЕКОЈ ДЕН</div>
+            <div class="item-top"><span class="item-name">Пастрмка на Скара (цела)</span><span class="item-dots"></span><span class="item-price">420 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+            <p class="item-desc">Цела пастрмка на ќумур, со лимон, лук и маслиново масло.</p>
+          </div>
+        </div>
+        <div class="menu-item" data-category="fish">
+          <div class="item-top"><span class="item-name">Пастрмка во Фолија со Зеленчук</span><span class="item-dots"></span><span class="item-price">450 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Печена во фолија со сезонски зеленчук, зачинска трева и бело вино.</p>
+        </div>
+        <div class="menu-item" data-category="fish">
+          <div class="item-top"><span class="item-name">Пржени Гирици (250г) <span class="badge badge-popular">ПОПУЛАРНО</span></span><span class="item-dots"></span><span class="item-price">280 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Хрскави ситни рипчиња со лимон — класично мезе за ракија или бело вино.</p>
+        </div>
+        <div class="menu-item" data-category="fish">
+          <div class="item-top"><span class="item-name">Крап на Плоча</span><span class="item-dots"></span><span class="item-price">390 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Речен крап печен на врела плоча со лук и магдонос.</p>
+        </div>
+        <div class="menu-item" data-category="fish">
+          <div class="item-top"><span class="item-name">Ослич Филе (пржен)</span><span class="item-dots"></span><span class="item-price">320 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Нежно филе во лесна кора, сервирано со тартар сос.</p>
+        </div>
+        <div class="menu-item" data-category="fish">
+          <div class="item-top"><span class="item-name">Пржени Лигњи со Тартар</span><span class="item-dots"></span><span class="item-price">420 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Хрскави колутчиња лигњи со домашен тартар сос и лимон.</p>
+        </div>
+        <div class="menu-item" data-category="fish">
+          <div class="item-top"><span class="item-name">Лосос Филе на Жар</span><span class="item-dots"></span><span class="item-price">560 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Филе лосос на жар со спанаќ на путер и лимонов прелив.</p>
+        </div>
+        <div class="menu-item" data-category="fish">
+          <div class="item-top"><span class="item-name">Рибна Плата „Езерска“ (за 2 лица) <span class="badge badge-special">СПЕЦИЈАЛИТЕТ</span></span><span class="item-dots"></span><span class="item-price">950 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Пастрмка, гирици, лигњи и ослич — сè на една даска, со прилози.</p>
+        </div>
       </div>
 
       <!-- COLUMN 2 -->
@@ -1029,8 +1436,63 @@
           <div class="item-top"><span class="item-name">Фурнаринки</span><span class="item-dots"></span><span class="item-price">70 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
           <p class="item-desc">Топли мали лепчиња од фурна.</p>
         </div>
+        <div class="menu-item" data-category="side">
+          <div class="item-top"><span class="item-name">Печурки на Жар</span><span class="item-dots"></span><span class="item-price">160 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Печурки на ќумур со лук, магдонос и маслиново масло.</p>
+        </div>
+        <div class="menu-item" data-category="side">
+          <div class="item-top"><span class="item-name">Ориз со Зеленчук</span><span class="item-dots"></span><span class="item-price">110 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Лесен прилог од ориз со сезонски зеленчук.</p>
+        </div>
 
-        <div class="section-title" id="section-drinks"><span class="flame-icon">🔥</span> ПИЈАЛАЦИ</div>
+        <!-- ===== WINE LIST =====
+             Suggestion modals send the guest here to pick for themselves. -->
+        <div class="section-title" id="section-wine"><span class="flame-icon">🍷</span> ВИНСКА КАРТА</div>
+        <div class="wine-note">Македонски вина од Тиквешкиот регион. Прашајте го келнерот за препорака кон вашето јадење.</div>
+
+        <div class="subsection-label">Црвени вина</div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Домашно Црвено Вино (чаша)</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Полно домашно црвено вино од точење — оди со скара и печено месо.</p>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Т'га за Југ (чаша 0.2l) <span class="badge badge-popular">ПОПУЛАРНО</span></span><span class="item-dots"></span><span class="item-price">180 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Најпознатото македонско вранец вино, меко и питко.</p>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Т'га за Југ (шише 0.75l)</span><span class="item-dots"></span><span class="item-price">890 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Кратошија (чаша 0.2l)</span><span class="item-dots"></span><span class="item-price">190 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Автохтона сорта, посветла и повоќкаста од вранецот.</p>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Вранец Барик (шише 0.75l) <span class="badge badge-special">СПЕЦИЈАЛИТЕТ</span></span><span class="item-dots"></span><span class="item-price">1200 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Зреен вранец одлежан во дабови буриња — за јагнешко и мешана скара.</p>
+        </div>
+
+        <div class="subsection-label">Бели вина &amp; розе</div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Домашно Бело Вино (чаша)</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Свежо домашно бело од точење — најдобро со риба и салати.</p>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Темјаника (чаша 0.2l) <span class="badge badge-fish">УЗ РИБА</span></span><span class="item-dots"></span><span class="item-price">180 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Ароматично суво бело со мирис на цвеќе — класика со пастрмка.</p>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Темјаника (шише 0.75l)</span><span class="item-dots"></span><span class="item-price">900 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Смедеревка (чаша 0.2l)</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Лесно и освежително бело, добро со гирици и предјадења.</p>
+        </div>
+        <div class="menu-item" data-category="wine">
+          <div class="item-top"><span class="item-name">Розе Вранец (чаша 0.2l)</span><span class="item-dots"></span><span class="item-price">170 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Разладено розе — оди и со скара и со риба.</p>
+        </div>
+
+        <div class="section-title" id="section-drinks"><span class="flame-icon">🍺</span> ПИЈАЛАЦИ</div>
         <div class="menu-item" data-category="drink">
           <div class="item-top"><span class="item-name">Домашна Жолта Ракија (0.05l)</span><span class="item-dots"></span><span class="item-price">100 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
@@ -1038,10 +1500,7 @@
           <div class="item-top"><span class="item-name">Узо (0.05l)</span><span class="item-dots"></span><span class="item-price">120 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
-          <div class="item-top"><span class="item-name">Домашно Црвено Вино (чаша)</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
-        </div>
-        <div class="menu-item" data-category="drink">
-          <div class="item-top"><span class="item-name">Домашно Бело Вино (чаша)</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <div class="item-top"><span class="item-name">Мастика (0.05l)</span><span class="item-dots"></span><span class="item-price">120 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
         <div class="menu-item" data-category="drink">
           <div class="item-top"><span class="item-name">Скопско Пиво (0.5l)</span><span class="item-dots"></span><span class="item-price">140 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
@@ -1103,6 +1562,14 @@
         <div class="menu-item" data-category="dessert">
           <div class="item-top"><span class="item-name">Палачинки со Еурокрем &amp; Ореви</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
         </div>
+        <div class="menu-item" data-category="dessert">
+          <div class="item-top"><span class="item-name">Крем Пита</span><span class="item-dots"></span><span class="item-price">150 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Домашна крем пита со ванила и лиснато тесто.</p>
+        </div>
+        <div class="menu-item" data-category="dessert">
+          <div class="item-top"><span class="item-name">Ревани со Сладолед</span><span class="item-dots"></span><span class="item-price">170 ден</span><button class="add-to-cart-btn" title="Додади во нарачка" onclick="addToCart(this)">+</button></div>
+          <p class="item-desc">Сочен ревани сервиран топол, со кугла ванила сладолед.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -1120,7 +1587,6 @@
       </div>
     </div>
     <div class="cart-panel" id="cartPanel">
-      <div id="waiterSummary"></div>
       <div id="cartLines"></div>
       <div class="cart-actions">
         <button class="cart-action-btn cart-action-clear" onclick="clearOrder()">Избриши нарачка</button>
@@ -1129,36 +1595,34 @@
     </div>
   </div>
 
-  <!-- UPSELL TOAST -->
-  <div class="upsell-toast" id="upsellToast">
-    <div class="upsell-text" id="upsellText"></div>
-    <div class="upsell-actions" id="upsellActions"></div>
+  <!-- SUGGESTION MODAL (at most two per guest) -->
+  <div class="suggest-overlay" id="suggestOverlay" role="dialog" aria-modal="true" aria-labelledby="suggestTitle" aria-hidden="true">
+    <div class="suggest-sheet" id="suggestSheet">
+      <div class="suggest-grip"></div>
+      <div class="suggest-eyebrow" id="suggestEyebrow">Препорака од кафаната</div>
+      <h2 class="suggest-title" id="suggestTitle"></h2>
+      <p class="suggest-sub" id="suggestSub"></p>
+      <div class="suggest-options" id="suggestOptions"></div>
+      <button class="suggest-browse" id="suggestBrowse" type="button" hidden></button>
+      <button class="suggest-dismiss" id="suggestDismiss" type="button">Не, благодарам</button>
+    </div>
+  </div>
+
+  <!-- WAITER SUMMARY -->
+  <div class="waiter-overlay" id="waiterOverlay" role="dialog" aria-modal="true" aria-labelledby="waiterTitle" aria-hidden="true">
+    <div class="waiter-sheet">
+      <div class="summary-eyebrow">Мојата Кафана</div>
+      <div class="summary-header" id="waiterTitle">НАРАЧКА</div>
+      <div id="waiterLines"></div>
+      <div class="summary-total"><span>ВКУПНО</span><span class="summary-total-value" id="waiterTotal">0 ден</span></div>
+      <p class="summary-note">Покажете го овој екран на келнерот. Сите цени се во денари.</p>
+      <button class="summary-back-btn" type="button" onclick="closeWaiterSummary()">Назад кон менито</button>
+    </div>
   </div>
 
   <script>
     // ---- STATE ----
     let cart = {};
-    let pendingUpsell = null;
-    let upsellShowTimeout = null;
-
-    const SIDE_SUGGESTIONS = [
-      { name: "Домашен Помфрит", price: 120 },
-      { name: "Домашно Лепче", price: 60 }
-    ];
-    const DESSERT_SUGGESTIONS = [
-      { name: "Домашна Баклава", price: 160 },
-      { name: "Тулумби (3 парчиња)", price: 130 },
-      { name: "Палачинки со Еурокрем & Ореви", price: 150 }
-    ];
-    const DRINK_PAIRING = {
-      "Домашна Баклава": { name: "Домашна Жолта Ракија (0.05l)", price: 100 },
-      "Тулумби (3 парчиња)": { name: "Домашно Црвено Вино (чаша)", price: 150 },
-      "Палачинки со Еурокрем & Ореви": { name: "Топло Чоколадо", price: 140 }
-    };
-    const FALLBACK_DRINK = { name: "Домашна Лимонада", price: 120 };
-
-    let upsellShowing = false;
-    let upsellHideTimeoutId = null;
 
     // ---- DOM REFS ----
     const cartCount = document.getElementById('cartCount');
@@ -1166,10 +1630,16 @@
     const cartLines = document.getElementById('cartLines');
     const cartBar = document.getElementById('cartBar');
     const cartIcon = document.getElementById('cartIcon');
-    const upsellToast = document.getElementById('upsellToast');
-    const upsellText = document.getElementById('upsellText');
-    const upsellActions = document.getElementById('upsellActions');
-    const waiterSummary = document.getElementById('waiterSummary');
+    const suggestOverlay = document.getElementById('suggestOverlay');
+    const suggestTitle = document.getElementById('suggestTitle');
+    const suggestSub = document.getElementById('suggestSub');
+    const suggestEyebrow = document.getElementById('suggestEyebrow');
+    const suggestOptions = document.getElementById('suggestOptions');
+    const suggestBrowse = document.getElementById('suggestBrowse');
+    const suggestDismiss = document.getElementById('suggestDismiss');
+    const waiterOverlay = document.getElementById('waiterOverlay');
+    const waiterLines = document.getElementById('waiterLines');
+    const waiterTotal = document.getElementById('waiterTotal');
 
     // ---- HELPERS ----
     function parsePrice(t) { const m = t.replace(/\u00A0/g,' ').match(/[\d.,]+/); return m ? parseFloat(m[0].replace(',','.')) : 0; }
@@ -1180,6 +1650,272 @@
     }
     function formatDen(a) { const r = Math.round(a * 100) / 100; return (Number.isInteger(r) ? r : r.toFixed(2)) + ' ден'; }
     function isInCart(name) { return !!cart[name]; }
+    function addLine(name, price, category) {
+      if (!cart[name]) cart[name] = { price: price, qty: 0, category: category || '' };
+      cart[name].qty++;
+    }
+
+    /* ==================================================================
+       SUGGESTIONS
+
+       A guest sees at most two suggestion modals for the whole visit.
+       The budget lives in sessionStorage, so reloading the page or
+       re-scanning the code does not restart the pitch.
+
+       Each suggestion belongs to a topic and a topic is offered once.
+       Wine comes first against a plate of food, and every wine modal
+       also opens the full wine list, so a guest who would rather choose
+       for themselves is one tap away from it.
+       ================================================================== */
+    const MAX_SUGGESTIONS = 2;
+    const SUGGEST_DELAY_MS = 1100;
+    const STORE_KEY = 'kafana.suggestions.v1';
+
+    let suggestionsShown = 0;
+    const usedTopics = new Set();
+    let suggestTimer = null;
+    let suggestOpen = false;
+
+    function loadSuggestState() {
+      try {
+        const raw = sessionStorage.getItem(STORE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        suggestionsShown = saved.shown || 0;
+        (saved.topics || []).forEach(t => usedTopics.add(t));
+      } catch (e) { /* private browsing: the in-memory budget still holds */ }
+    }
+    function saveSuggestState() {
+      try {
+        sessionStorage.setItem(STORE_KEY, JSON.stringify({
+          shown: suggestionsShown,
+          topics: Array.from(usedTopics)
+        }));
+      } catch (e) { /* ignore */ }
+    }
+
+    const WINE_RED = [
+      { name: "Домашно Црвено Вино (чаша)", price: 150, icon: "🍷", note: "Полно домашно црвено од точење" },
+      { name: "Т'га за Југ (чаша 0.2l)", price: 180, icon: "🍷", note: "Најпознатиот македонски вранец" },
+      { name: "Вранец Барик (шише 0.75l)", price: 1200, icon: "🍾", note: "Зреен вранец од дабово буре — за цела маса" }
+    ];
+    const WINE_WHITE = [
+      { name: "Темјаника (чаша 0.2l)", price: 180, icon: "🍷", note: "Ароматично суво бело — класика со пастрмка" },
+      { name: "Домашно Бело Вино (чаша)", price: 150, icon: "🥂", note: "Свежо домашно бело од точење" },
+      { name: "Розе Вранец (чаша 0.2l)", price: 170, icon: "🌸", note: "Разладено розе, оди и со риба и со скара" }
+    ];
+    const SIDES = [
+      { name: "Домашно Лепче", price: 60, icon: "🍞", note: "Топол сомун потпечен на скара" },
+      { name: "Домашен Помфрит", price: 120, icon: "🍟", note: "Рачно сечен, печен до златна боја" },
+      { name: "Печурки на Жар", price: 160, icon: "🍄", note: "Со лук, магдонос и маслиново масло" }
+    ];
+    const DESSERTS = [
+      { name: "Домашна Баклава", price: 160, icon: "🍯", note: "Со ореви и шербет" },
+      { name: "Крем Пита", price: 150, icon: "🍰", note: "Домашна, со ванила крем" },
+      { name: "Ревани со Сладолед", price: 170, icon: "🍨", note: "Сервиран топол, со кугла сладолед" }
+    ];
+    const AFTER_DESSERT = [
+      { name: "Турско Кафе", price: 60, icon: "☕", note: "Класичен крај на оброкот" },
+      { name: "Домашна Жолта Ракија (0.05l)", price: 100, icon: "🥃", note: "Домашна, за дигестив" },
+      { name: "Макијато (топло)", price: 80, icon: "☕", note: "Со млечна пена" }
+    ];
+
+    function cartHasCategory(cat) {
+      return Object.keys(cart).some(name => cart[name].category === cat);
+    }
+
+    /* A topic returns null once the guest has ordered everything in it. */
+    function buildTopic(topic) {
+      const fresh = list => list.filter(o => !isInCart(o.name)).slice(0, 3);
+
+      if (topic === 'wine') {
+        const fishTable = cartHasCategory('fish') && !cartHasCategory('main');
+        const options = fresh(fishTable ? WINE_WHITE : WINE_RED);
+        if (!options.length) return null;
+        return {
+          topic: topic,
+          category: 'wine',
+          eyebrow: 'Препорака кон јадењето',
+          title: 'Сакате вино кон јадењето?',
+          sub: fishTable
+            ? 'Кон риба одлично оди ладно бело — темјаника или домашно бело од точење.'
+            : 'Црвено вино и скара на ќумур одат заедно веќе стотина години.',
+          options: options,
+          browse: { label: 'Види ја целата винска карта', target: 'section-wine' }
+        };
+      }
+      if (topic === 'side') {
+        const options = fresh(SIDES);
+        if (!options.length) return null;
+        return {
+          topic: topic,
+          category: 'side',
+          eyebrow: 'Прилог кон јадењето',
+          title: 'Сакате прилог кон јадењето?',
+          sub: 'Топол леб директно од фурна или рачно сечен домашен помфрит.',
+          options: options,
+          browse: { label: 'Види ги сите прилози', target: 'section-sides' }
+        };
+      }
+      if (topic === 'dessert') {
+        const options = fresh(DESSERTS);
+        if (!options.length) return null;
+        return {
+          topic: topic,
+          category: 'dessert',
+          eyebrow: 'За крај',
+          title: 'Ќе оставите место за десерт?',
+          sub: 'Сите десерти се домашни, правени истиот ден.',
+          options: options,
+          browse: { label: 'Види ги сите десерти', target: 'section-desserts' }
+        };
+      }
+      if (topic === 'coffee') {
+        const options = fresh(AFTER_DESSERT);
+        if (!options.length) return null;
+        return {
+          topic: topic,
+          category: 'drink',
+          eyebrow: 'По десертот',
+          title: 'Кафе или ракија за крај?',
+          sub: 'Турско кафе или домашна жолта ракија — како што налага обичајот.',
+          options: options,
+          browse: { label: 'Види ги сите топли пијалаци', target: 'section-coffee' }
+        };
+      }
+      return null;
+    }
+
+    /* Which topic fits what the guest just tapped, in order of preference. */
+    function topicsFor(category) {
+      switch (category) {
+        case 'main': return ['wine', 'side', 'dessert'];
+        case 'fish': return ['wine', 'side', 'dessert'];
+        case 'side': return ['wine', 'dessert'];
+        case 'dessert': return ['coffee', 'wine'];
+        default: return [];   // drinks and wine never start a pitch
+      }
+    }
+
+    function maybeSuggest(category) {
+      if (suggestionsShown >= MAX_SUGGESTIONS) return;
+      if (suggestOpen || suggestTimer) return;
+
+      for (const topic of topicsFor(category)) {
+        if (usedTopics.has(topic)) continue;
+        if (!buildTopic(topic)) continue;
+        suggestTimer = setTimeout(function () {
+          suggestTimer = null;
+          // Re-check: the guest may have added the item themselves meanwhile.
+          if (suggestionsShown >= MAX_SUGGESTIONS || suggestOpen) return;
+          const plan = buildTopic(topic);
+          if (plan) openSuggestion(plan);
+        }, SUGGEST_DELAY_MS);
+        return;
+      }
+    }
+
+    function optionRow(opt, category) {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'suggest-option';
+
+      const icon = document.createElement('span');
+      icon.className = 'suggest-option-icon';
+      icon.textContent = opt.icon || '🍽';
+
+      const body = document.createElement('span');
+      body.className = 'suggest-option-body';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'suggest-option-name';
+      nameEl.textContent = opt.name;
+      body.appendChild(nameEl);
+      if (opt.note) {
+        const noteEl = document.createElement('span');
+        noteEl.className = 'suggest-option-note';
+        noteEl.textContent = opt.note;
+        body.appendChild(noteEl);
+      }
+
+      const priceEl = document.createElement('span');
+      priceEl.className = 'suggest-option-price';
+      priceEl.textContent = formatDen(opt.price);
+
+      const plus = document.createElement('span');
+      plus.className = 'suggest-option-plus';
+      plus.textContent = '+';
+
+      row.appendChild(icon);
+      row.appendChild(body);
+      row.appendChild(priceEl);
+      row.appendChild(plus);
+
+      row.addEventListener('click', function () {
+        addLine(opt.name, opt.price, category);
+        renderCart();
+        bounceCartIcon();
+        closeSuggestion();
+      });
+      return row;
+    }
+
+    function openSuggestion(plan) {
+      suggestEyebrow.textContent = plan.eyebrow;
+      suggestTitle.textContent = plan.title;
+      suggestSub.textContent = plan.sub;
+
+      suggestOptions.innerHTML = '';
+      plan.options.forEach(opt => suggestOptions.appendChild(optionRow(opt, plan.category)));
+
+      if (plan.browse) {
+        suggestBrowse.hidden = false;
+        suggestBrowse.textContent = plan.browse.label + ' →';
+        suggestBrowse.onclick = function () {
+          closeSuggestion();
+          goToSection(plan.browse.target);
+        };
+      } else {
+        suggestBrowse.hidden = true;
+        suggestBrowse.onclick = null;
+      }
+
+      suggestOverlay.classList.add('visible');
+      suggestOverlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      suggestOpen = true;
+
+      usedTopics.add(plan.topic);
+      suggestionsShown++;
+      saveSuggestState();
+    }
+
+    function closeSuggestion() {
+      suggestOverlay.classList.remove('visible');
+      suggestOverlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      suggestOpen = false;
+    }
+
+    /* Send the guest to a section and mark it, so they land oriented. */
+    function goToSection(id) {
+      const target = document.getElementById(id);
+      if (!target) return;
+      document.querySelectorAll('.category-ribbon .cat-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.target === id);
+      });
+      // Scroll is released on the same frame the overlay closes; wait a tick.
+      requestAnimationFrame(function () {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.classList.remove('flash');
+        void target.offsetWidth;
+        target.classList.add('flash');
+      });
+    }
+
+    suggestDismiss.addEventListener('click', closeSuggestion);
+    suggestOverlay.addEventListener('click', function (e) {
+      if (e.target === suggestOverlay) closeSuggestion();
+    });
 
     // ---- ADD TO CART ----
     window.addToCart = function(btn) {
@@ -1190,10 +1926,10 @@
       if (!nameEl || !priceEl) return;
       const name = cleanItemName(nameEl);
       const price = parsePrice(priceEl.textContent);
-      const category = container.dataset.category || container.closest('[data-category]')?.dataset.category;
+      const holder = container.dataset.category ? container : container.closest('[data-category]');
+      const category = holder ? holder.dataset.category : '';
 
-      if (!cart[name]) cart[name] = { price, qty: 0 };
-      cart[name].qty++;
+      addLine(name, price, category);
       renderCart();
       bounceCartIcon();
 
@@ -1201,105 +1937,78 @@
       void btn.offsetWidth;
       btn.classList.add('just-added');
 
-      if (category === 'main') {
-        const availSides = SIDE_SUGGESTIONS.filter(s => !isInCart(s.name));
-        if (availSides.length > 0) {
-          pendingUpsell = { options: availSides, header: "Сакате прилог со главното јадење? Изберете:" };
-        }
-      } else if (category === 'dessert') {
-        const specific = DRINK_PAIRING[name];
-        let options = [];
-        if (specific && !isInCart(specific.name)) options.push(specific);
-        if (!isInCart(FALLBACK_DRINK.name)) options.push(FALLBACK_DRINK);
-        if (options.length > 0) {
-          pendingUpsell = { options: options, header: "Со десерт, одлично оди:" };
-        }
-      }
+      maybeSuggest(category);
     };
-
-    // ---- UPSELL UI ----
-    function showUpsell(options, headerText) {
-      if (upsellShowing) return;
-      upsellText.innerHTML = headerText;
-      upsellActions.innerHTML = '';
-      options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'upsell-option-btn';
-        btn.textContent = opt.name + ' (' + formatDen(opt.price) + ')';
-        btn.onclick = function() {
-          if (!cart[opt.name]) cart[opt.name] = { price: opt.price, qty: 0 };
-          cart[opt.name].qty++;
-          renderCart();
-          bounceCartIcon();
-          dismissUpsell();
-          pendingUpsell = null;
-          if (opt.name === 'Домашен Помфрит' || opt.name === 'Домашно Лепче') {
-            setTimeout(() => {
-              if (!upsellShowing) {
-                const avail = DESSERT_SUGGESTIONS.filter(s => !isInCart(s.name));
-                if (avail.length > 0) {
-                  pendingUpsell = { options: avail, header: "Сакате десерт после главното јадење? Изберете:" };
-                  if (cartBar.classList.contains('expanded')) {
-                    showUpsell(pendingUpsell.options, pendingUpsell.header);
-                    pendingUpsell = null;
-                  }
-                }
-              }
-            }, 1500);
-          }
-        };
-        upsellActions.appendChild(btn);
-      });
-      const dismissBtn = document.createElement('button');
-      dismissBtn.className = 'upsell-dismiss-btn';
-      dismissBtn.textContent = 'Не, благодарам';
-      dismissBtn.onclick = function() { dismissUpsell(); pendingUpsell = null; };
-      upsellActions.appendChild(dismissBtn);
-
-      upsellShowing = true;
-      upsellToast.classList.add('visible');
-      clearTimeout(upsellHideTimeoutId);
-      upsellHideTimeoutId = setTimeout(dismissUpsell, 15000);
-    }
-
-    function dismissUpsell() {
-      upsellToast.classList.remove('visible');
-      upsellShowing = false;
-      clearTimeout(upsellHideTimeoutId);
-    }
 
     // ---- CART RENDER ----
     function renderCart() {
-      closeWaiterSummary();
-
       const names = Object.keys(cart);
       let sum = 0, q = 0;
       cartLines.innerHTML = '';
+
       if (names.length === 0) {
-        cartLines.innerHTML = '<div class="cart-empty-msg">Вашата нарачка е празна — додајте јадења од менито.</div>';
+        const empty = document.createElement('div');
+        empty.className = 'cart-empty-msg';
+        empty.textContent = 'Вашата нарачка е празна — додајте јадења од менито.';
+        cartLines.appendChild(empty);
       } else {
-        names.forEach(name => {
+        names.forEach(function (name) {
           const item = cart[name];
           const lineTotal = item.price * item.qty;
           sum += lineTotal;
           q += item.qty;
-          const line = document.createElement('div');
-          line.className = 'cart-line';
-          line.innerHTML = `
-            <span class="cart-line-name">${name}</span>
-            <span class="cart-line-qty-controls">
-              <button class="cart-line-qty-btn" onclick="changeQty('${name}', 'dec')">−</button>
-              <span class="cart-line-qty-num">${item.qty}</span>
-              <button class="cart-line-qty-btn" onclick="changeQty('${name}', 'inc')">+</button>
-            </span>
-            <span class="cart-line-price">${formatDen(lineTotal)}</span>
-            <button class="cart-line-remove" onclick="removeItem('${name}')">✕</button>
-          `;
-          cartLines.appendChild(line);
+          cartLines.appendChild(cartLine(name, item, lineTotal));
         });
       }
       cartCount.textContent = q === 0 ? 'Празна' : q + (q === 1 ? ' ставка' : ' ставки');
       cartTotal.textContent = formatDen(sum);
+    }
+
+    /* Built from DOM nodes rather than a template string: dish names carry
+       quotes and typographic marks that would need escaping in markup. */
+    function cartLine(name, item, lineTotal) {
+      const line = document.createElement('div');
+      line.className = 'cart-line';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'cart-line-name';
+      nameEl.textContent = name;
+
+      const controls = document.createElement('span');
+      controls.className = 'cart-line-qty-controls';
+      controls.appendChild(qtyButton('−', 'Намали количина', function () { changeQty(name, 'dec'); }));
+      const num = document.createElement('span');
+      num.className = 'cart-line-qty-num';
+      num.textContent = item.qty;
+      controls.appendChild(num);
+      controls.appendChild(qtyButton('+', 'Зголеми количина', function () { changeQty(name, 'inc'); }));
+
+      const priceEl = document.createElement('span');
+      priceEl.className = 'cart-line-price';
+      priceEl.textContent = formatDen(lineTotal);
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'cart-line-remove';
+      remove.textContent = '✕';
+      remove.setAttribute('aria-label', 'Отстрани ' + name);
+      remove.addEventListener('click', function () { removeItem(name); });
+
+      line.appendChild(nameEl);
+      line.appendChild(controls);
+      line.appendChild(priceEl);
+      line.appendChild(remove);
+      return line;
+    }
+
+    function qtyButton(label, aria, handler) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cart-line-qty-btn';
+      b.textContent = label;
+      b.setAttribute('aria-label', aria);
+      b.addEventListener('click', handler);
+      return b;
     }
 
     // ---- QTY CONTROLS ----
@@ -1323,24 +2032,7 @@
 
     // ---- TOGGLE CART ----
     function toggleCart() {
-      const isExpanded = cartBar.classList.contains('expanded');
-      if (!isExpanded) {
-        cartBar.classList.add('expanded');
-        if (upsellShowTimeout) { clearTimeout(upsellShowTimeout); upsellShowTimeout = null; }
-        if (pendingUpsell && !upsellShowing) {
-          upsellShowTimeout = setTimeout(() => {
-            if (pendingUpsell && !upsellShowing && cartBar.classList.contains('expanded')) {
-              showUpsell(pendingUpsell.options, pendingUpsell.header);
-              pendingUpsell = null;
-            }
-            upsellShowTimeout = null;
-          }, 5000);
-        }
-      } else {
-        cartBar.classList.remove('expanded');
-        if (upsellShowTimeout) { clearTimeout(upsellShowTimeout); upsellShowTimeout = null; }
-        closeWaiterSummary();
-      }
+      cartBar.classList.toggle('expanded');
     }
 
     // ---- WAITER SUMMARY ----
@@ -1351,28 +2043,51 @@
         return;
       }
 
-      let html = '<div class="summary-header">📋 НАРАЧКА</div>';
+      waiterLines.innerHTML = '';
       let total = 0;
-      names.forEach(name => {
+      names.forEach(function (name) {
         const item = cart[name];
         const lineTotal = item.price * item.qty;
         total += lineTotal;
-        html += `<div class="summary-line"><span>${name} ×${item.qty}</span><span style="color:var(--accent-gold);">${formatDen(lineTotal)}</span></div>`;
-      });
-      html += `<div class="summary-total"><span>ВКУПНО</span><span style="color:var(--accent-gold);">${formatDen(total)}</span></div>`;
-      html += `<button class="summary-back-btn" onclick="closeWaiterSummary()">Назад</button>`;
 
-      waiterSummary.innerHTML = html;
-      waiterSummary.style.display = 'block';
-      cartLines.style.display = 'none';
-      cartBar.classList.add('expanded');
+        const line = document.createElement('div');
+        line.className = 'summary-line';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'summary-line-name';
+        nameEl.textContent = name + ' ';
+        const qtyEl = document.createElement('span');
+        qtyEl.className = 'summary-line-qty';
+        qtyEl.textContent = '×' + item.qty;
+        nameEl.appendChild(qtyEl);
+
+        const priceEl = document.createElement('span');
+        priceEl.className = 'summary-line-price';
+        priceEl.textContent = formatDen(lineTotal);
+
+        line.appendChild(nameEl);
+        line.appendChild(priceEl);
+        waiterLines.appendChild(line);
+      });
+
+      waiterTotal.textContent = formatDen(total);
+
+      if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
+      closeSuggestion();
+      waiterOverlay.classList.add('visible');
+      waiterOverlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
     };
 
     window.closeWaiterSummary = function() {
-      waiterSummary.style.display = 'none';
-      waiterSummary.innerHTML = '';
-      cartLines.style.display = 'block';
+      waiterOverlay.classList.remove('visible');
+      waiterOverlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
     };
+
+    waiterOverlay.addEventListener('click', function (e) {
+      if (e.target === waiterOverlay) window.closeWaiterSummary();
+    });
 
     // ---- BUTTONS: DELETE ----
     window.clearOrder = function() {
@@ -1382,12 +2097,18 @@
       }
       if (!confirm('Дали сте сигурни дека сакате да ја избришете нарачката?')) return;
       cart = {};
-      pendingUpsell = null;
-      if (upsellShowTimeout) { clearTimeout(upsellShowTimeout); upsellShowTimeout = null; }
-      dismissUpsell();
-      closeWaiterSummary();
+      if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
+      closeSuggestion();
+      window.closeWaiterSummary();
       renderCart();
     };
+
+    // Escape closes whichever sheet is on top.
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (waiterOverlay.classList.contains('visible')) window.closeWaiterSummary();
+      else if (suggestOpen) closeSuggestion();
+    });
 
     // ---- WELCOME OVERLAY ----
     const overlay = document.getElementById('welcomeOverlay');
@@ -1433,13 +2154,7 @@
     document.querySelectorAll('.category-ribbon .cat-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
         e.preventDefault();
-        const targetId = this.dataset.target;
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        document.querySelectorAll('.category-ribbon .cat-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+        goToSection(this.dataset.target);
       });
     });
 
@@ -1461,24 +2176,16 @@
     }, observerOptions);
     sections.forEach(section => observer.observe(section));
 
-    // ---- FALLBACK EVENT LISTENERS ----
-    document.addEventListener('DOMContentLoaded', function() {
-      const clearBtn = document.querySelector('.cart-action-clear');
-      const waiterBtn = document.querySelector('.cart-action-waiter');
-      if (clearBtn) {
-        clearBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          window.clearOrder();
-        });
-      }
-      if (waiterBtn) {
-        waiterBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          window.showToWaiter();
-        });
-      }
-      renderCart();
+    // ---- CART ACTIONS ----
+    // The buttons sit inside the cart header's toggle area, so their clicks
+    // must not bubble up and collapse the panel underneath the guest.
+    document.querySelectorAll('.cart-actions .cart-action-btn').forEach(btn => {
+      btn.addEventListener('click', e => e.stopPropagation());
     });
+
+    // ---- INIT ----
+    loadSuggestState();
+    renderCart();
   </script>
 </body>
 </html>
