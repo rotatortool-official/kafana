@@ -944,6 +944,85 @@
       border-top: 3px solid var(--accent-gold);
     }
     .summary-total-value { color: var(--accent-gold); white-space: nowrap; }
+
+    /* ----- SPLIT THE BILL -----
+       Read at the table by people counting heads, so the head count is a
+       row of real buttons rather than a stepper or a dropdown. */
+    .split-block {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-color);
+    }
+    .split-label {
+      font-family: var(--font-label);
+      font-size: 0.8rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .split-counts {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .split-count-btn {
+      min-height: 46px;
+      padding: 0;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-light);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s, transform .1s;
+    }
+    .split-count-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .split-count-btn:active { transform: scale(0.94); }
+    .split-count-btn.active {
+      background: var(--accent-gold);
+      border-color: var(--accent-gold);
+      color: var(--bg-dark);
+      box-shadow: 0 0 14px rgba(243,186,47,0.35);
+    }
+    .split-count-btn.active:hover { color: var(--bg-dark); }
+    .split-result {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .split-result-label {
+      font-family: var(--font-label);
+      font-size: clamp(1rem, 4.2vw, 1.15rem);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .split-result-value {
+      font-family: var(--font-display);
+      font-size: clamp(1.35rem, 5.6vw, 1.65rem);
+      font-weight: 800;
+      color: var(--accent-gold);
+      white-space: nowrap;
+    }
+    /* Shown only when the total will not divide evenly. */
+    .split-note {
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+    @media (max-width: 360px) {
+      .split-counts { grid-template-columns: repeat(4, 1fr); }
+    }
+
     .summary-note {
       font-family: var(--font-body);
       font-size: 0.95rem;
@@ -1646,6 +1725,18 @@
       <div class="summary-header" id="waiterTitle">НАРАЧКА</div>
       <div id="waiterLines"></div>
       <div class="summary-total"><span>ВКУПНО</span><span class="summary-total-value" id="waiterTotal">0 ден</span></div>
+
+      <!-- SPLIT THE BILL -->
+      <div class="split-block">
+        <div class="split-label">Подели сметка</div>
+        <div class="split-counts" id="splitCounts" role="group" aria-label="Број на лица"></div>
+        <div class="split-result">
+          <span class="split-result-label" id="splitResultLabel">По лице</span>
+          <span class="split-result-value" id="splitPerPerson">0 ден</span>
+        </div>
+        <p class="split-note" id="splitNote" hidden></p>
+      </div>
+
       <p class="summary-note">Покажете го овој екран на келнерот. Сите цени се во денари.</p>
       <button class="summary-back-btn" type="button" onclick="closeWaiterSummary()">Назад кон менито</button>
     </div>
@@ -1671,6 +1762,10 @@
     const waiterOverlay = document.getElementById('waiterOverlay');
     const waiterLines = document.getElementById('waiterLines');
     const waiterTotal = document.getElementById('waiterTotal');
+    const splitCounts = document.getElementById('splitCounts');
+    const splitPerPerson = document.getElementById('splitPerPerson');
+    const splitResultLabel = document.getElementById('splitResultLabel');
+    const splitNote = document.getElementById('splitNote');
 
     // ---- HELPERS ----
     function parsePrice(t) { const m = t.replace(/\u00A0/g,' ').match(/[\d.,]+/); return m ? parseFloat(m[0].replace(',','.')) : 0; }
@@ -2128,6 +2223,8 @@
       });
 
       waiterTotal.textContent = formatDen(total);
+      billTotal = total;
+      renderSplit();
 
       if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
       closeSuggestion();
@@ -2135,6 +2232,53 @@
       waiterOverlay.setAttribute('aria-hidden', 'false');
       document.body.classList.add('modal-open');
     };
+
+    /* ---- SPLIT THE BILL ----
+       Denars have no subunit in practice, so an uneven total is settled the
+       way a table actually settles it: some people put in one denar more,
+       and the note spells out exactly how many. Nobody overpays. */
+    const MAX_DINERS = 12;
+    let splitCount = 1;
+    let billTotal = 0;
+
+    for (let n = 1; n <= MAX_DINERS; n++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'split-count-btn';
+      b.textContent = n;
+      b.dataset.count = n;
+      b.setAttribute('aria-label', n + (n === 1 ? ' лице' : ' лица'));
+      b.addEventListener('click', function () {
+        splitCount = Number(this.dataset.count);
+        renderSplit();
+      });
+      splitCounts.appendChild(b);
+    }
+    renderSplit();   // paint the default selection of one
+
+    function renderSplit() {
+      splitCounts.querySelectorAll('.split-count-btn').forEach(b => {
+        const on = Number(b.dataset.count) === splitCount;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+
+      splitResultLabel.textContent = splitCount === 1 ? 'Вкупно за плаќање' : 'По лице';
+
+      const base = Math.floor(billTotal / splitCount);
+      const overpayers = billTotal - base * splitCount;   // pay one denar more
+      splitPerPerson.textContent = formatDen(overpayers > 0 ? base + 1 : base);
+
+      if (overpayers === 0) {
+        splitNote.hidden = true;
+        splitNote.textContent = '';
+      } else {
+        splitNote.hidden = false;
+        splitNote.textContent =
+          overpayers + ' × ' + formatDen(base + 1) + '  ·  ' +
+          (splitCount - overpayers) + ' × ' + formatDen(base);
+      }
+    }
 
     window.closeWaiterSummary = function() {
       waiterOverlay.classList.remove('visible');
@@ -2154,6 +2298,9 @@
       }
       if (!confirm('Дали сте сигурни дека сакате да ја избришете нарачката?')) return;
       cart = {};
+      splitCount = 1;
+      billTotal = 0;
+      renderSplit();   // repaint, so a reopened summary does not show the old head count
       if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
       closeSuggestion();
       window.closeWaiterSummary();
