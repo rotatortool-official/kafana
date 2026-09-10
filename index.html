@@ -637,52 +637,46 @@
     }
     .cart-action-waiter:hover { box-shadow: 0 0 14px rgba(243,186,47,0.5); }
 
-    /* ===== SUGGESTION MODAL =====
-       A guest holding a phone one-handed gets a bottom sheet they can reach;
-       on a tablet or laptop the same sheet centres itself. */
+    /* ===== SUGGESTION SHEET =====
+       It sits ABOVE the order bar and stops short of it, so the guest can
+       still read what they have ordered while deciding. --cart-h is the
+       height the order currently occupies, kept in sync by the script. */
     .suggest-overlay {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: var(--cart-h, 0px);
       z-index: 200;
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      padding: 0;
+      padding: 12px 8px 0 8px;
+      overflow: hidden;          /* the sheet slides up from behind the order */
       background: rgba(3, 6, 10, 0.72);
       -webkit-backdrop-filter: blur(4px);
       backdrop-filter: blur(4px);
       opacity: 0;
       visibility: hidden;
-      transition: opacity .3s, visibility .3s;
+      transition: opacity .3s, visibility .3s, bottom .3s;
     }
     .suggest-overlay.visible { opacity: 1; visibility: visible; }
 
     .suggest-sheet {
       width: 100%;
       max-width: 560px;
-      max-height: 90vh;
-      max-height: 90dvh;
+      max-height: 100%;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      background: linear-gradient(180deg, #1b2129 0%, var(--card-bg) 45%, var(--bg-dark) 100%);
+      background: var(--card-bg);
       border: 1px solid var(--accent-gold);
-      border-bottom: none;
-      border-radius: 22px 22px 0 0;
+      border-radius: 18px;
       box-shadow: 0 -12px 48px rgba(0,0,0,0.85), 0 0 34px rgba(243,186,47,0.16);
-      padding: 10px 20px calc(24px + env(safe-area-inset-bottom, 0px)) 20px;
+      padding: 18px 18px 0 18px;
       transform: translateY(100%);
       transition: transform .38s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .suggest-overlay.visible .suggest-sheet { transform: translateY(0); }
-
-    /* Drag handle: signals "this sheet came up from the bottom, swipe it away". */
-    .suggest-grip {
-      width: 44px;
-      height: 4px;
-      border-radius: 4px;
-      background: var(--border-color);
-      margin: 4px auto 16px auto;
-    }
 
     .suggest-eyebrow {
       font-family: var(--font-label);
@@ -691,7 +685,7 @@
       text-transform: uppercase;
       color: var(--accent-gold);
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .suggest-title {
       font-family: var(--font-display);
@@ -709,7 +703,7 @@
       line-height: 1.55;
       color: var(--text-muted);
       text-align: center;
-      margin: 0 auto 22px auto;
+      margin: 0 auto 16px auto;
       max-width: 36ch;
     }
 
@@ -719,8 +713,8 @@
       align-items: center;
       gap: 14px;
       width: 100%;
-      min-height: 68px;
-      padding: 12px 14px;
+      min-height: 62px;
+      padding: 10px 12px;
       text-align: left;
       background: rgba(255,255,255,0.035);
       border: 1px solid var(--border-color);
@@ -790,7 +784,7 @@
       gap: 8px;
       width: 100%;
       min-height: 52px;
-      margin-top: 16px;
+      margin-top: 0;
       padding: 13px 16px;
       font-family: var(--font-label);
       font-size: 0.86rem;
@@ -825,17 +819,33 @@
     }
     .suggest-dismiss:hover { color: var(--text-light); border-color: var(--text-muted); }
 
+    /* Pinned to the foot of the sheet: when the option list is taller than
+       the space above the order, "no thanks" must still be one tap away. */
+    .suggest-footer {
+      position: sticky;
+      bottom: 0;
+      background: var(--card-bg);
+      padding: 12px 0 16px 0;
+      margin-top: 4px;
+    }
+    .suggest-footer::before {
+      content: '';
+      display: block;
+      height: 14px;
+      margin: -26px 0 12px 0;
+      background: linear-gradient(180deg, rgba(33,38,45,0), var(--card-bg));
+      pointer-events: none;
+    }
+
     @media (min-width: 640px) {
-      .suggest-overlay { align-items: center; padding: 24px; }
+      /* Still bottom-aligned: the order bar is down there and the sheet
+         belongs next to it, not floating in the middle of the screen. */
+      .suggest-overlay { padding: 24px 24px 0 24px; }
       .suggest-sheet {
-        border-radius: 18px;
-        border-bottom: 1px solid var(--accent-gold);
-        max-height: 86vh;
-        padding: 26px 30px 30px 30px;
+        padding: 26px 30px 28px 30px;
         transform: translateY(24px) scale(0.97);
       }
       .suggest-overlay.visible .suggest-sheet { transform: translateY(0) scale(1); }
-      .suggest-grip { display: none; }
     }
 
     /* ===== WAITER SUMMARY =====
@@ -1618,13 +1628,14 @@
   <!-- SUGGESTION MODAL (at most two per guest) -->
   <div class="suggest-overlay" id="suggestOverlay" role="dialog" aria-modal="true" aria-labelledby="suggestTitle" aria-hidden="true">
     <div class="suggest-sheet" id="suggestSheet">
-      <div class="suggest-grip"></div>
       <div class="suggest-eyebrow" id="suggestEyebrow">Препорака од кафаната</div>
       <h2 class="suggest-title" id="suggestTitle"></h2>
       <p class="suggest-sub" id="suggestSub"></p>
       <div class="suggest-options" id="suggestOptions"></div>
-      <button class="suggest-browse" id="suggestBrowse" type="button" hidden></button>
-      <button class="suggest-dismiss" id="suggestDismiss" type="button">Не, благодарам</button>
+      <div class="suggest-footer">
+        <button class="suggest-browse" id="suggestBrowse" type="button" hidden></button>
+        <button class="suggest-dismiss" id="suggestDismiss" type="button">Не, благодарам</button>
+      </div>
     </div>
   </div>
 
@@ -1688,7 +1699,7 @@
        for themselves is one tap away from it.
        ================================================================== */
     const MAX_SUGGESTIONS = 2;
-    const SUGGEST_DELAY_MS = 1100;
+    const SUGGEST_DELAY_MS = 5000;
     const STORE_KEY = 'kafana.suggestions.v1';
 
     let suggestionsShown = 0;
@@ -1715,24 +1726,24 @@
     }
 
     const WINE_RED = [
-      { name: "Домашно Црвено Вино (чаша)", price: 150, icon: "🍷", note: "Полно домашно црвено од точење" },
+      { name: "Домашно Црвено Вино (чаша)", price: 150, icon: "🍷", note: "Домашно, од точење" },
       { name: "Т'га за Југ (чаша 0.2l)", price: 180, icon: "🍷", note: "Најпознатиот македонски вранец" },
-      { name: "Вранец Барик (шише 0.75l)", price: 1200, icon: "🍾", note: "Зреен вранец од дабово буре — за цела маса" }
+      { name: "Вранец Барик (шише 0.75l)", price: 1200, icon: "🍾", note: "Одлежан во дабово буре" }
     ];
     const WINE_WHITE = [
-      { name: "Темјаника (чаша 0.2l)", price: 180, icon: "🍷", note: "Ароматично суво бело — класика со пастрмка" },
-      { name: "Домашно Бело Вино (чаша)", price: 150, icon: "🥂", note: "Свежо домашно бело од точење" },
-      { name: "Розе Вранец (чаша 0.2l)", price: 170, icon: "🌸", note: "Разладено розе, оди и со риба и со скара" }
+      { name: "Темјаника (чаша 0.2l)", price: 180, icon: "🍷", note: "Суво бело, класика со риба" },
+      { name: "Домашно Бело Вино (чаша)", price: 150, icon: "🥂", note: "Домашно, од точење" },
+      { name: "Розе Вранец (чаша 0.2l)", price: 170, icon: "🌸", note: "Разладено, оди со сè" }
     ];
     const SIDES = [
       { name: "Домашно Лепче", price: 60, icon: "🍞", note: "Топол сомун потпечен на скара" },
-      { name: "Домашен Помфрит", price: 120, icon: "🍟", note: "Рачно сечен, печен до златна боја" },
-      { name: "Печурки на Жар", price: 160, icon: "🍄", note: "Со лук, магдонос и маслиново масло" }
+      { name: "Домашен Помфрит", price: 120, icon: "🍟", note: "Рачно сечен, златно печен" },
+      { name: "Печурки на Жар", price: 160, icon: "🍄", note: "Со лук и магдонос" }
     ];
     const DESSERTS = [
       { name: "Домашна Баклава", price: 160, icon: "🍯", note: "Со ореви и шербет" },
       { name: "Крем Пита", price: 150, icon: "🍰", note: "Домашна, со ванила крем" },
-      { name: "Ревани со Сладолед", price: 170, icon: "🍨", note: "Сервиран топол, со кугла сладолед" }
+      { name: "Ревани со Сладолед", price: 170, icon: "🍨", note: "Топол, со кугла сладолед" }
     ];
     const AFTER_DESSERT = [
       { name: "Турско Кафе", price: 60, icon: "☕", note: "Класичен крај на оброкот" },
@@ -1806,33 +1817,55 @@
       return null;
     }
 
-    /* Which topic fits what the guest just tapped, in order of preference. */
-    function topicsFor(category) {
-      switch (category) {
-        case 'main': return ['wine', 'side', 'dessert'];
-        case 'fish': return ['wine', 'side', 'dessert'];
-        case 'side': return ['wine', 'dessert'];
-        case 'dessert': return ['coffee', 'wine'];
-        default: return [];   // drinks and wine never start a pitch
-      }
+    /* What the order as a whole is missing, in order of preference. */
+    function topicsForCart() {
+      const has = c => cartHasCategory(c);
+      const topics = [];
+      if (has('main') || has('fish')) topics.push('wine', 'side', 'dessert');
+      else if (has('side')) topics.push('wine', 'dessert');
+      if (has('dessert')) topics.push('coffee');
+      return topics;   // an order of drinks alone is left alone
     }
 
-    function maybeSuggest(category) {
+    function nextTopic() {
+      for (const topic of topicsForCart()) {
+        if (usedTopics.has(topic)) continue;
+        if (buildTopic(topic)) return topic;
+      }
+      return null;
+    }
+
+    /* Nothing is offered until the guest opens their order, and then only
+       after five seconds — long enough to read what they have so far. */
+    function scheduleSuggestion() {
       if (suggestionsShown >= MAX_SUGGESTIONS) return;
       if (suggestOpen || suggestTimer) return;
+      if (!cartBar.classList.contains('expanded')) return;
+      if (!nextTopic()) return;
 
-      for (const topic of topicsFor(category)) {
-        if (usedTopics.has(topic)) continue;
-        if (!buildTopic(topic)) continue;
-        suggestTimer = setTimeout(function () {
-          suggestTimer = null;
-          // Re-check: the guest may have added the item themselves meanwhile.
-          if (suggestionsShown >= MAX_SUGGESTIONS || suggestOpen) return;
-          const plan = buildTopic(topic);
-          if (plan) openSuggestion(plan);
-        }, SUGGEST_DELAY_MS);
-        return;
-      }
+      suggestTimer = setTimeout(function () {
+        suggestTimer = null;
+        if (suggestionsShown >= MAX_SUGGESTIONS || suggestOpen) return;
+        if (!cartBar.classList.contains('expanded')) return;   // order closed again
+        // Recompute: the guest may have added the very thing we were about to offer.
+        const topic = nextTopic();
+        if (!topic) return;
+        const plan = buildTopic(topic);
+        if (plan) openSuggestion(plan);
+      }, SUGGEST_DELAY_MS);
+    }
+
+    function cancelSuggestion() {
+      if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
+      if (suggestOpen) closeSuggestion();
+    }
+
+    /* The sheet floats above the order bar, so it has to know how tall the
+       order currently is — collapsed, expanded, or mid-animation. */
+    function syncCartHeight() {
+      const top = cartBar.getBoundingClientRect().top;
+      const occupied = Math.max(0, window.innerHeight - top);
+      document.documentElement.style.setProperty('--cart-h', Math.round(occupied + 10) + 'px');
     }
 
     function optionRow(opt, category) {
@@ -1957,7 +1990,8 @@
       void btn.offsetWidth;
       btn.classList.add('just-added');
 
-      maybeSuggest(category);
+      // Adding a dish while the order is already open re-arms the timer.
+      if (cartBar.classList.contains('expanded')) scheduleSuggestion();
     };
 
     // ---- CART RENDER ----
@@ -2052,7 +2086,10 @@
 
     // ---- TOGGLE CART ----
     function toggleCart() {
-      cartBar.classList.toggle('expanded');
+      const expanded = cartBar.classList.toggle('expanded');
+      syncCartHeight();
+      if (expanded) scheduleSuggestion();
+      else cancelSuggestion();
     }
 
     // ---- WAITER SUMMARY ----
@@ -2214,6 +2251,13 @@
     // ---- INIT ----
     loadSuggestState();
     renderCart();
+
+    // Track the order bar's height so the sheet always clears it, including
+    // while the panel is animating open and as lines are added or removed.
+    syncCartHeight();
+    if (window.ResizeObserver) new ResizeObserver(syncCartHeight).observe(cartBar);
+    window.addEventListener('resize', syncCartHeight);
+    window.addEventListener('orientationchange', syncCartHeight);
   </script>
 </body>
 </html>
