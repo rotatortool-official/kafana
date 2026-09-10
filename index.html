@@ -1032,6 +1032,8 @@
       margin-bottom: 34px;
     }
     .welcome-enter {
+      position: relative;
+      overflow: hidden;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -1049,6 +1051,24 @@
       0%,100% { box-shadow: 0 0 0 rgba(243,186,47,0); border-color: var(--border-color); }
       50% { box-shadow: 0 0 16px rgba(243,186,47,0.25); border-color: var(--accent-gold); }
     }
+    /* Fills across the 3s the auto-enter timer runs, so the wait reads as
+       deliberate rather than as a page that has stalled. Keep this duration
+       in step with WELCOME_MS in the script. */
+    .welcome-progress {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-gold);
+      transform: scaleX(0);
+      transform-origin: left center;
+      animation: welcome-fill 3s linear forwards;
+    }
+    @keyframes welcome-fill { to { transform: scaleX(1); } }
+    @media (prefers-reduced-motion: reduce) {
+      .welcome-progress { animation: none; transform: scaleX(1); opacity: 0.4; }
+    }
   </style>
 </head>
 <body class="locked">
@@ -1059,7 +1079,7 @@
       <div class="welcome-eyebrow">Од 2012 година</div>
       <h2 class="welcome-title">Добредојдовте во<br>Мојата Кафана</h2>
       <p class="welcome-subtitle">Каде што ѓумурот гори, ракијата грее и секое јадење раскажува приказна.</p>
-      <span class="welcome-enter">✦ Допрете за да влезете ✦</span>
+      <span class="welcome-enter">✦ Допрете за да влезете ✦<span class="welcome-progress"></span></span>
     </div>
   </div>
 
@@ -2111,9 +2131,16 @@
     });
 
     // ---- WELCOME OVERLAY ----
+    // The splash opens the menu on its own after three seconds. A guest who
+    // has already read it can tap through sooner; nobody has to tap at all.
+    // Keep WELCOME_MS in step with the .welcome-progress animation.
+    const WELCOME_MS = 3000;
     const overlay = document.getElementById('welcomeOverlay');
     const body = document.body;
+    let welcomeTimer = null;
+
     function dismissWelcome() {
+      if (welcomeTimer) { clearTimeout(welcomeTimer); welcomeTimer = null; }
       overlay.classList.add('hidden');
       body.classList.remove('locked');
       document.removeEventListener('keydown', dismissWelcome);
@@ -2123,6 +2150,7 @@
       if (e.key === 'Enter' || e.key === ' ') dismissWelcome();
     });
     document.addEventListener('keydown', dismissWelcome);
+    welcomeTimer = setTimeout(dismissWelcome, WELCOME_MS);
 
     // ---- PANEL TOGGLE ----
     document.querySelectorAll('.showcase-card').forEach(card => {
