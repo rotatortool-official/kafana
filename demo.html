@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мојата Кафана - Демо</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Marcellus&family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* The one link a restaurant owner gets: what the system is, and the
+       three doors into it. Phone first, like everything a guest touches. */
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --gold: #f3ba2f;
+      --text: #f0f6fc;
+      --muted: #8b949e;
+      --border: #30363d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Serif', Georgia, serif;
+      min-height: 100vh;
+      padding: 28px 16px 40px;
+    }
+    main { max-width: 560px; margin: 0 auto; }
+    .eyebrow { font-family: 'Marcellus', serif; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); text-align: center; }
+    h1 { font-family: 'Cinzel', serif; font-weight: 800; font-size: clamp(1.8rem, 8vw, 2.4rem); text-align: center; margin: 6px 0 10px; }
+    .lead { text-align: center; color: var(--muted); line-height: 1.6; font-size: 0.98rem; margin-bottom: 24px; }
+    .door {
+      display: flex; gap: 14px; align-items: center;
+      padding: 16px; margin-bottom: 12px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      color: var(--text); text-decoration: none;
+      transition: border-color .15s, transform .15s;
+    }
+    .door:hover { border-color: var(--gold); }
+    .door:active { transform: scale(0.99); }
+    .door .icon { font-size: 2rem; width: 46px; text-align: center; flex-shrink: 0; }
+    .door b { display: block; font-family: 'Cinzel', serif; font-size: 1.08rem; color: var(--gold); margin-bottom: 3px; }
+    .door span { color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+    .door .arrow { margin-left: auto; color: var(--gold); font-size: 1.3rem; }
+    h2 { font-family: 'Cinzel', serif; font-size: 1.05rem; margin: 28px 0 10px; color: var(--text); }
+    ol { padding-left: 20px; color: var(--muted); line-height: 1.7; font-size: 0.94rem; }
+    ol b { color: var(--text); font-weight: 600; }
+    .points { list-style: none; padding: 0; }
+    .points li { padding: 10px 0; border-bottom: 1px dotted var(--border); color: var(--muted); line-height: 1.5; font-size: 0.92rem; }
+    .points li b { color: var(--text); font-weight: 600; }
+    .foot { margin-top: 28px; text-align: center; color: var(--muted); font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Демо за угостители</div>
+    <h1>Мојата Кафана</h1>
+    <p class="lead">Гостите нарачуваат од телефон преку QR код на масата. Келнерот и газдата гледаат сè на компјутерот или телефонот — секоја нарачка, со време и име.</p>
+
+    <a class="door" href="index.html?table=5" target="_blank" rel="noopener">
+      <div class="icon">📱</div>
+      <div><b>Мени за гостите</b><span>Отворете на телефон — како гостин на маса 5.</span></div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="door" href="staff.html" target="_blank" rel="noopener">
+      <div class="icon">🖥️</div>
+      <div><b>Каса за персоналот</b><span>На компјутер или телефон. Потребно е корисничко име и лозинка.</span></div>
+      <div class="arrow">›</div>
+    </a>
+    <a class="door" href="qr.html" target="_blank" rel="noopener">
+      <div class="icon">🔳</div>
+      <div><b>QR кодови за масите</b><span>Картички за печатење, по една за секоја маса.</span></div>
+      <div class="arrow">›</div>
+    </a>
+
+    <h2>Пробајте за 2 минути</h2>
+    <ol>
+      <li>Отворете ја <b>Касата</b> на компјутер и најавете се.</li>
+      <li>Горе изберете име на келнер.</li>
+      <li>На телефон отворете го <b>Менито</b>, додајте нешто и притиснете <b>Испрати нарачка</b>.</li>
+      <li>Маса 5 на касата трепка. Притиснете <b>✓ Примено</b>.</li>
+      <li>Притиснете <b>Наплати</b> → <b>Готовина</b>. На телефонот пишува <b>ПЛАТЕНО</b>.</li>
+    </ol>
+
+    <h2>Што добива газдата</h2>
+    <ul class="points">
+      <li><b>Испратена нарачка не се менува.</b> Гостинот не може да тврди дека нарачал помалку — секоја нарачка има датум и време.</li>
+      <li><b>Затворена сметка е конечна.</b> Добива број и не може повторно да се отвори или измени.</li>
+      <li><b>Келнерот не може да „заборави“ кафе.</b> Гостите нарачуваат сами, а секое одбивање или префрлање е запишано со име.</li>
+      <li><b>Историја по маса и по келнер</b>, дневен извештај и извоз за Excel.</li>
+      <li><b>Резервации</b> само за персоналот — гостите не ги гледаат.</li>
+    </ul>
+
+    <p class="foot">Демо верзија · измислено мени и цени</p>
+  </main>
+</body>
+</html>

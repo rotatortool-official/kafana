@@ -324,6 +324,30 @@
       .panel { position: static; max-height: none; }
       .add-grid { grid-template-columns: 1fr; }
     }
+    /* A waiter's phone: compact table grid, tabs that scroll sideways, and
+       the chosen table's orders right under the tap, not 20 tables down. */
+    .back-btn { display: none; }
+    @media (max-width: 640px) {
+      .topbar { padding: 10px 12px; gap: 8px 12px; }
+      .brand { font-size: 1.05rem; }
+      .tabs { order: 5; width: 100%; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+      .tab { white-space: nowrap; padding: 7px 11px; font-size: 0.85rem; }
+      .seal { display: none; }
+      main { padding: 12px; }
+      .tables { grid-template-columns: repeat(4, 1fr); gap: 8px; scroll-margin-top: 140px; }
+      .table-card { min-height: 74px; padding: 8px; border-radius: 10px; }
+      .table-no { font-size: 1.2rem; }
+      .table-state { font-size: 0.6rem; letter-spacing: 0.5px; }
+      .table-total { margin-top: 4px; font-size: 0.8rem; }
+      .table-since { display: none; }
+      .table-booking { font-size: 0.62rem; }
+      .panel { padding: 14px; scroll-margin-top: 120px; }
+      .back-btn { display: inline-block; margin-bottom: 10px; }
+      .demo-foot { padding: 12px; }
+      .modal { padding: 10px; }
+      .modal-box { padding: 16px; }
+      .pay-btn { padding: 16px 6px; }
+    }
     @media print {
       body * { visibility: hidden; }
       .receipt, .receipt * { visibility: visible; }
@@ -441,7 +465,7 @@
     <form class="modal-box login-box" id="loginForm">
       <div class="modal-title">Каса · најава</div>
       <p class="panel-sub" id="loginNote">Само за персоналот на кафаната.</p>
-      <label class="field">Е-пошта<input class="search" type="email" id="loginEmail" autocomplete="username" required></label>
+      <label class="field">Корисничко име<input class="search" type="text" id="loginEmail" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="на пр. demo" required></label>
       <label class="field">Лозинка<input class="search" type="password" id="loginPass" autocomplete="current-password" required></label>
       <p class="warn" id="loginError" hidden></p>
       <div class="modal-actions"><button class="btn gold" type="submit" id="loginBtn">Најави се</button></div>
@@ -525,7 +549,11 @@
         }
         if (next) card.appendChild(el('div', 'table-booking', '📅 ' + timeOf(next.starts_at) + ' ' + next.guest_name + ' (' + next.people + ')'));
         if (selected === t) card.classList.add('selected');
-        card.addEventListener('click', function () { selected = t; render(); });
+        card.addEventListener('click', function () {
+          selected = t;
+          render();
+          if (matchMedia('(max-width: 1000px)').matches) $('panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
         box.appendChild(card);
       }
       $('newCount').hidden = !newRounds;
@@ -541,6 +569,10 @@
         return;
       }
       const bill = st.bills[st.openByTable[selected]];
+      const back = el('button', 'btn small back-btn', '← Сите маси');
+      back.type = 'button';
+      back.addEventListener('click', () => $('tables').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      p.appendChild(back);
       p.appendChild(el('div', 'panel-title', 'Маса ' + selected));
       if (!bill) {
         p.appendChild(el('div', 'panel-sub', 'Слободна — нема отворена сметка.'));
@@ -1465,16 +1497,24 @@
       }
       $('login').hidden = false;
       $('loginNote').textContent = data.session
-        ? 'Сметката ' + data.session.user.email + ' не е на листата на персонал.'
+        ? 'Корисникот ' + data.session.user.email.replace(/^rotatortool\+|@gmail\.com$/g, '') + ' не е на листата на персонал.'
         : 'Само за персоналот на кафаната.';
       return false;
+    }
+    /* Staff log in with a short username. Behind it is a Gmail "+" alias
+       (demo -> rotatortool+demo@gmail.com), so no one needs a new inbox.
+       A full email address still works as typed. */
+    const LOGIN_MAILBOX = ['rotatortool', 'gmail.com'];
+    function loginEmail(name) {
+      name = name.trim().toLowerCase();
+      return name.includes('@') ? name : LOGIN_MAILBOX[0] + '+' + name + '@' + LOGIN_MAILBOX[1];
     }
     $('loginForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       $('loginBtn').disabled = true;
       $('loginError').hidden = true;
       const { error } = await Ledger.db.auth.signInWithPassword({
-        email: $('loginEmail').value.trim(), password: $('loginPass').value
+        email: loginEmail($('loginEmail').value), password: $('loginPass').value
       });
       $('loginBtn').disabled = false;
       if (error) {
