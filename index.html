@@ -1834,7 +1834,7 @@
       <div id="cartLines"></div>
       <div class="cart-actions">
         <button class="cart-action-btn cart-action-clear" onclick="clearOrder()">Избриши</button>
-        <button class="cart-action-btn cart-action-waiter" onclick="openSend()">Испрати нарачка</button>
+        <button class="cart-action-btn cart-action-waiter" id="sendBtn" onclick="openSend()">Испрати нарачка</button>
       </div>
       <button class="bill-mini" id="billMini" type="button" onclick="showToWaiter()" hidden>
         <span class="bill-mini-left"><span class="bill-mini-lock">🔒</span> <span id="billMiniText"></span></span>
@@ -1896,15 +1896,31 @@
       </div>
 
       <button class="send-confirm-btn" id="requestBill" type="button" onclick="requestBill()">Повикај келнер за плаќање</button>
-      <p class="summary-note">Секоја нарачка е заклучена со време на испраќање. Сите цени се во денари.</p>
+      <p class="summary-note" id="summaryNote">Секоја нарачка е заклучена со време на испраќање. Сите цени се во денари.</p>
       <button class="summary-back-btn" type="button" onclick="closeWaiterSummary()">Назад кон менито</button>
     </div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
-  <script src="ledger.js"></script>
+  <script>
+    /* Package 1 (?paket=1) is the menu on its own: the guest builds a list
+       and shows it to the waiter, who rings it into the restaurant's own
+       register. No server is loaded, so it works even if ours is down.
+       Package 2 (the default) sends orders to the staff till. */
+    window.KAFANA_BASIC = new URLSearchParams(location.search).get('paket') === '1';
+    if (KAFANA_BASIC) {
+      window.Ledger = {
+        TABLES: 20,
+        state: function () { return { bills: {}, openByTable: {}, rounds: {}, billCount: 0 }; },
+        events: function () { return []; },
+        onChange: function () {}
+      };
+    } else {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"><\/script>' +
+                     '<script src="ledger.js"><\/script>');
+    }
+  </script>
   <script>
     // ---- STATE ----
     let cart = {};
@@ -2562,10 +2578,30 @@
 
     const STATUS_LABEL = { new: 'Чека потврда', accepted: 'Потврдена', served: 'Сервирана' };
 
+    // Package 1: the "bill" is simply the guest's list, shown to the waiter.
+    function renderBasic() {
+      document.getElementById('billMini').hidden = true;
+      document.getElementById('paidStamp').hidden = true;
+      document.getElementById('requestBill').hidden = true;
+      document.getElementById('draftNote').hidden = true;
+      document.getElementById('waiterTitle').textContent = table ? 'НАРАЧКА · МАСА ' + table : 'НАРАЧКА';
+      waiterLines.innerHTML = '';
+      let total = 0;
+      Object.keys(cart).forEach(function (name) {
+        const item = cart[name];
+        total += item.price * item.qty;
+        waiterLines.appendChild(summaryLine(name, item.qty, item.price * item.qty));
+      });
+      billTotal = total;
+      waiterTotal.textContent = formatDen(total);
+      renderSplit();
+    }
+
     function renderBill() {
       const chip = document.getElementById('cartTable');
       chip.hidden = !table;
       chip.textContent = table ? 'Маса ' + table : '';
+      if (KAFANA_BASIC) { renderBasic(); return; }
 
       const bill = currentBill();
       const mini = document.getElementById('billMini');
@@ -2640,6 +2676,12 @@
     }
 
     window.showToWaiter = function() {
+      if (KAFANA_BASIC) {
+        if (!Object.keys(cart).length) { alert('Нарачката е празна. Додајте нешто прво.'); return; }
+        renderBill();
+        openOverlay(waiterOverlay);
+        return;
+      }
       renderBill();
       if (!currentBill()) {
         alert('Сè уште немате испратено нарачка.');
@@ -2829,6 +2871,12 @@
     });
 
     // ---- INIT ----
+    if (KAFANA_BASIC) {
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.textContent = 'Покажи на келнерот';
+      sendBtn.setAttribute('onclick', 'showToWaiter()');
+      document.getElementById('summaryNote').textContent = 'Покажете го овој екран на келнерот. Сите цени се во денари.';
+    }
     loadSuggestState();
     knownStatus = (function (b) { return b ? { id: b.id, status: b.status } : null; })(currentBill());
     renderCart();

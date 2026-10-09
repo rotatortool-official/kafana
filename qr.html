@@ -83,6 +83,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script>
+    const BASIC = new URLSearchParams(location.search).get('paket') === '1';
     const sheet = document.getElementById('sheet');
     const from = document.getElementById('from');
     const to = document.getElementById('to');
@@ -90,7 +91,8 @@
     base.value = new URL('index.html', location.href).href;
 
     function card(n) {
-      const url = base.value.trim() + '?table=' + n;
+      // Package 1 cards open the menu-only version.
+      const url = base.value.trim() + '?' + (BASIC ? 'paket=1&' : '') + 'table=' + n;
       const qr = qrcode(0, 'M');   // medium error correction survives a scuffed card
       qr.addData(url);
       qr.make();
@@ -98,7 +100,7 @@
       c.className = 'card';
       c.innerHTML =
         '<div class="name">Мојата Кафана</div>' +
-        '<div class="scan">Скенирај · нарачај · плати</div>' +
+        '<div class="scan">' + (BASIC ? 'Скенирај · види го менито' : 'Скенирај · нарачај · плати') + '</div>' +
         '<div class="qr">' + qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true }) + '</div>' +
         '<div class="table"><small>МАСА</small>' + n + '</div>';
       c.title = url;

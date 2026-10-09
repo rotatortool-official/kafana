@@ -43,6 +43,16 @@
     .door b { display: block; font-family: 'Cinzel', serif; font-size: 1.08rem; color: var(--gold); margin-bottom: 3px; }
     .door span { color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
     .door .arrow { margin-left: auto; color: var(--gold); font-size: 1.3rem; }
+    .pkg { margin-bottom: 22px; padding: 16px; border: 1px solid var(--border); border-radius: 18px; }
+    .pkg-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+    .pkg-head b { display: block; font-family: 'Cinzel', serif; font-size: 1.15rem; margin-bottom: 4px; }
+    .pkg-head span { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+    .pkg-no { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--gold); color: var(--bg); font-family: 'Cinzel', serif; font-weight: 800; }
+    .pkg .door { margin-bottom: 10px; }
+    .pkg .door:last-child { margin-bottom: 0; }
+    .pkg.soon { opacity: 0.6; }
+    .pkg.soon .pkg-head { margin-bottom: 0; }
+    .pkg.soon .pkg-no { background: var(--border); color: var(--text); }
     h2 { font-family: 'Cinzel', serif; font-size: 1.05rem; margin: 28px 0 10px; color: var(--text); }
     ol { padding-left: 20px; color: var(--muted); line-height: 1.7; font-size: 0.94rem; }
     ol b { color: var(--text); font-weight: 600; }
@@ -58,23 +68,44 @@
     <h1>Мојата Кафана</h1>
     <p class="lead">Гостите нарачуваат од телефон преку QR код на масата. Келнерот и газдата гледаат сè на компјутерот или телефонот — секоја нарачка, со време и име.</p>
 
-    <a class="door" href="index.html?table=5" target="_blank" rel="noopener">
-      <div class="icon">📱</div>
-      <div><b>Мени за гостите</b><span>Отворете на телефон — како гостин на маса 5.</span></div>
-      <div class="arrow">›</div>
-    </a>
-    <a class="door" href="staff.html" target="_blank" rel="noopener">
-      <div class="icon">🖥️</div>
-      <div><b>Каса за персоналот</b><span>На компјутер или телефон. Потребно е корисничко име и лозинка.</span></div>
-      <div class="arrow">›</div>
-    </a>
-    <a class="door" href="qr.html" target="_blank" rel="noopener">
-      <div class="icon">🔳</div>
-      <div><b>QR кодови за масите</b><span>Картички за печатење, по една за секоја маса.</span></div>
-      <div class="arrow">›</div>
-    </a>
+    <section class="pkg">
+      <div class="pkg-head"><span class="pkg-no">1</span><div><b>QR мени</b><span>Гостите го гледаат менито на телефон и му ја покажуваат листата на келнерот. Келнерот ја внесува во вашата постојна каса.</span></div></div>
+      <a class="door" href="index.html?paket=1&amp;table=5" target="_blank" rel="noopener">
+        <div class="icon">📱</div>
+        <div><b>Мени за гостите</b><span>Отворете на телефон.</span></div>
+        <div class="arrow">›</div>
+      </a>
+      <a class="door" href="qr.html?paket=1" target="_blank" rel="noopener">
+        <div class="icon">🔳</div>
+        <div><b>QR кодови за масите</b><span>Картички за печатење.</span></div>
+        <div class="arrow">›</div>
+      </a>
+    </section>
 
-    <h2>Пробајте за 2 минути</h2>
+    <section class="pkg">
+      <div class="pkg-head"><span class="pkg-no">2</span><div><b>QR мени + нарачки + каса</b><span>Гостите сами испраќаат нарачка. Келнерот ја прима на компјутер или телефон, по маси, и ја наплаќа. Сè е поврзано во живо.</span></div></div>
+      <a class="door" href="index.html?table=5" target="_blank" rel="noopener">
+        <div class="icon">📱</div>
+        <div><b>Мени за гостите</b><span>Отворете на телефон — како гостин на маса 5.</span></div>
+        <div class="arrow">›</div>
+      </a>
+      <a class="door" href="staff.html" target="_blank" rel="noopener">
+        <div class="icon">🖥️</div>
+        <div><b>Каса за персоналот</b><span>На компјутер или телефон. Корисничко име и лозинка.</span></div>
+        <div class="arrow">›</div>
+      </a>
+      <a class="door" href="qr.html" target="_blank" rel="noopener">
+        <div class="icon">🔳</div>
+        <div><b>QR кодови за масите</b><span>Секој код ја знае својата маса.</span></div>
+        <div class="arrow">›</div>
+      </a>
+    </section>
+
+    <section class="pkg soon">
+      <div class="pkg-head"><span class="pkg-no">3</span><div><b>Комплетно — наскоро</b><span>Пакет 2 + екран за кујната и посебен преглед за газдата од секаде.</span></div></div>
+    </section>
+
+    <h2>Пробајте пакет 2 за 2 минути</h2>
     <ol>
       <li>Отворете ја <b>Касата</b> на компјутер и најавете се.</li>
       <li>Горе изберете име на келнер.</li>
@@ -83,7 +114,7 @@
       <li>Притиснете <b>Наплати</b> → <b>Готовина</b>. На телефонот пишува <b>ПЛАТЕНО</b>.</li>
     </ol>
 
-    <h2>Што добива газдата</h2>
+    <h2>Што добива газдата со пакет 2</h2>
     <ul class="points">
       <li><b>Испратена нарачка не се менува.</b> Гостинот не може да тврди дека нарачал помалку — секоја нарачка има датум и време.</li>
       <li><b>Затворена сметка е конечна.</b> Добива број и не може повторно да се отвори или измени.</li>
