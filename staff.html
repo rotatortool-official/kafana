@@ -1497,14 +1497,14 @@
       }
       $('login').hidden = false;
       $('loginNote').textContent = data.session
-        ? 'Корисникот ' + data.session.user.email.replace(/^rotatortool\+|@gmail\.com$/g, '') + ' не е на листата на персонал.'
+        ? 'Корисникот ' + data.session.user.email.replace(/^mojatakafana\+|@gmail\.com$/g, '') + ' не е на листата на персонал.'
         : 'Само за персоналот на кафаната.';
       return false;
     }
     /* Staff log in with a short username. Behind it is a Gmail "+" alias
-       (demo -> rotatortool+demo@gmail.com), so no one needs a new inbox.
-       A full email address still works as typed. */
-    const LOGIN_MAILBOX = ['rotatortool', 'gmail.com'];
+       of the product's own mailbox (demo -> mojatakafana+demo@gmail.com),
+       so no one needs a new inbox. A full email address still works as typed. */
+    const LOGIN_MAILBOX = ['mojatakafana', 'gmail.com'];
     function loginEmail(name) {
       name = name.trim().toLowerCase();
       return name.includes('@') ? name : LOGIN_MAILBOX[0] + '+' + name + '@' + LOGIN_MAILBOX[1];
