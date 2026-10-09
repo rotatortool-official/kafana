@@ -1052,6 +1052,138 @@
       color: var(--accent-gold);
     }
 
+    /* ===== ORDERING =====
+       The cart is a draft the guest can change freely. Sending it turns it
+       into a locked order on the table's bill, stamped with the time. */
+    .cart-table-chip {
+      display: inline-block;
+      margin-left: 4px;
+      padding: 1px 7px;
+      border: 1px solid var(--accent-gold);
+      border-radius: 10px;
+      font-family: var(--font-label);
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      color: var(--accent-gold);
+      vertical-align: 1px;
+    }
+    .bill-mini {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      min-height: 48px;
+      background: rgba(243,186,47,0.07);
+      border: none;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-light);
+      font-family: var(--font-ui);
+      font-size: 0.84rem;
+      text-align: left;
+      cursor: pointer;
+    }
+    .bill-mini-right {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--accent-gold);
+      white-space: nowrap;
+    }
+    .lock-note, .draft-note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border: 1px dashed var(--border-color);
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+    .draft-note { border-color: var(--accent-gold); color: var(--text-light); }
+    .send-confirm-btn {
+      margin-top: 18px;
+      width: 100%;
+      min-height: 56px;
+      padding: 15px;
+      background: var(--accent-gold);
+      border: 1px solid var(--accent-gold);
+      color: var(--bg-dark);
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--font-label);
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: box-shadow .2s, opacity .2s;
+    }
+    .send-confirm-btn:hover { box-shadow: 0 0 18px rgba(243,186,47,0.45); }
+    .send-confirm-btn:disabled {
+      background: var(--card-bg);
+      border-color: var(--border-color);
+      color: var(--text-muted);
+      box-shadow: none;
+      cursor: default;
+    }
+    .table-pick { margin: 6px 0 14px; }
+    .table-counts { grid-template-columns: repeat(5, 1fr); }
+
+    .round-block {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color);
+    }
+    .round-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-family: var(--font-label);
+      font-size: 0.78rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .round-status { white-space: nowrap; }
+    .round-status.new { color: var(--accent-gold); }
+    .round-status.accepted { color: #58a6ff; }
+    .round-status.served { color: #3fb950; }
+    .paid-stamp {
+      margin: 4px auto 6px;
+      padding: 8px 12px;
+      max-width: 340px;
+      border: 2px solid #3fb950;
+      border-radius: 8px;
+      color: #3fb950;
+      font-family: var(--font-display);
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 1px;
+      line-height: 1.4;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 16px;
+      z-index: 300;
+      max-width: calc(100% - 32px);
+      padding: 12px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--accent-gold);
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+      color: var(--text-light);
+      font-size: 0.9rem;
+      text-align: center;
+      transform: translate(-50%, -140%);
+      transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+    .toast.visible { transform: translate(-50%, 0); }
+
     @media (max-width: 768px) {
       .menu-container { grid-template-columns: 1fr; gap: 12px; }
       .showcase-grid { grid-template-columns: 1fr; }
@@ -1688,7 +1820,7 @@
     <div class="cart-bar-header" id="cartHeader">
       <div class="cart-bar-left">
         <span class="cart-icon" id="cartIcon">🛒</span>
-        <span><span class="cart-bar-label">Мојата нарачка</span><br><span class="cart-bar-count" id="cartCount">Празна</span></span>
+        <span><span class="cart-bar-label">Мојата нарачка</span> <span class="cart-table-chip" id="cartTable" hidden></span><br><span class="cart-bar-count" id="cartCount">Празна</span></span>
       </div>
       <div class="cart-bar-right">
         <span class="cart-bar-total" id="cartTotal">0 ден</span>
@@ -1698,9 +1830,13 @@
     <div class="cart-panel" id="cartPanel">
       <div id="cartLines"></div>
       <div class="cart-actions">
-        <button class="cart-action-btn cart-action-clear" onclick="clearOrder()">Избриши нарачка</button>
-        <button class="cart-action-btn cart-action-waiter" onclick="showToWaiter()">Покажи на келнерот</button>
+        <button class="cart-action-btn cart-action-clear" onclick="clearOrder()">Избриши</button>
+        <button class="cart-action-btn cart-action-waiter" onclick="openSend()">Испрати нарачка</button>
       </div>
+      <button class="bill-mini" id="billMini" type="button" onclick="showToWaiter()" hidden>
+        <span class="bill-mini-left"><span class="bill-mini-lock">🔒</span> <span id="billMiniText"></span></span>
+        <span class="bill-mini-right"><span id="billMiniTotal"></span> ›</span>
+      </button>
     </div>
   </div>
 
@@ -1718,13 +1854,32 @@
     </div>
   </div>
 
-  <!-- WAITER SUMMARY -->
+  <!-- SEND ORDER: the last moment an order can still change -->
+  <div class="waiter-overlay" id="sendOverlay" role="dialog" aria-modal="true" aria-labelledby="sendTitle" aria-hidden="true">
+    <div class="waiter-sheet">
+      <div class="summary-eyebrow" id="sendEyebrow">Мојата Кафана</div>
+      <div class="summary-header" id="sendTitle">ИСПРАТИ НАРАЧКА</div>
+      <div class="table-pick" id="tablePick" hidden>
+        <div class="split-label">На која маса седите?</div>
+        <div class="split-counts table-counts" id="tableCounts" role="group" aria-label="Број на маса"></div>
+      </div>
+      <div id="sendLines"></div>
+      <div class="summary-total"><span>ВКУПНО</span><span class="summary-total-value" id="sendTotal">0 ден</span></div>
+      <p class="lock-note">🔒 Откако ќе ја испратите, нарачката се заклучува со датум и време и повеќе не може да се менува ниту брише. Секогаш можете да додадете нова нарачка.</p>
+      <button class="send-confirm-btn" id="sendConfirm" type="button" onclick="confirmSend()">Испрати во кујна</button>
+      <button class="summary-back-btn" type="button" onclick="closeSend()">Назад — уште бирам</button>
+    </div>
+  </div>
+
+  <!-- THE TABLE'S BILL: every order sent, locked, with its time -->
   <div class="waiter-overlay" id="waiterOverlay" role="dialog" aria-modal="true" aria-labelledby="waiterTitle" aria-hidden="true">
     <div class="waiter-sheet">
-      <div class="summary-eyebrow">Мојата Кафана</div>
-      <div class="summary-header" id="waiterTitle">НАРАЧКА</div>
+      <div class="summary-eyebrow" id="waiterEyebrow">Мојата Кафана</div>
+      <div class="summary-header" id="waiterTitle">СМЕТКА</div>
+      <div class="paid-stamp" id="paidStamp" hidden></div>
       <div id="waiterLines"></div>
       <div class="summary-total"><span>ВКУПНО</span><span class="summary-total-value" id="waiterTotal">0 ден</span></div>
+      <p class="draft-note" id="draftNote" hidden></p>
 
       <!-- SPLIT THE BILL -->
       <div class="split-block">
@@ -1737,11 +1892,15 @@
         <p class="split-note" id="splitNote" hidden></p>
       </div>
 
-      <p class="summary-note">Покажете го овој екран на келнерот. Сите цени се во денари.</p>
+      <button class="send-confirm-btn" id="requestBill" type="button" onclick="requestBill()">Повикај келнер за плаќање</button>
+      <p class="summary-note">Секоја нарачка е заклучена со време на испраќање. Сите цени се во денари.</p>
       <button class="summary-back-btn" type="button" onclick="closeWaiterSummary()">Назад кон менито</button>
     </div>
   </div>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="ledger.js"></script>
   <script>
     // ---- STATE ----
     let cart = {};
@@ -2111,6 +2270,7 @@
       }
       cartCount.textContent = q === 0 ? 'Празна' : q + (q === 1 ? ' ставка' : ' ставки');
       cartTotal.textContent = formatDen(sum);
+      renderBill();
     }
 
     /* Built from DOM nodes rather than a template string: dish names carry
@@ -2187,51 +2347,267 @@
       else cancelSuggestion();
     }
 
-    // ---- WAITER SUMMARY ----
-    window.showToWaiter = function() {
+    /* ==================================================================
+       ORDERING
+
+       The cart is a draft: the guest can change it as much as they like.
+       "Send" turns it into an order on the table's bill, stamped with the
+       time, and from then on it is locked — no button on any screen edits
+       or removes it. Changing their mind means sending another order.
+       ================================================================== */
+    const TABLE_KEY = 'kafana.table';
+    const BILL_KEY = 'kafana.lastBill';
+
+    // The QR code on each table carries its number: ...index.html?table=5
+    function tableFromUrl() {
+      const q = new URLSearchParams(location.search);
+      const n = Number(q.get('table') || q.get('masa'));
+      return Number.isInteger(n) && n >= 1 && n <= Ledger.TABLES ? n : null;
+    }
+    const urlTable = tableFromUrl();
+    let table = urlTable;
+    if (!table) {
+      try { table = Number(sessionStorage.getItem(TABLE_KEY)) || null; } catch (e) { /* ignore */ }
+    }
+    let pickedTable = table;
+
+    const sendOverlay = document.getElementById('sendOverlay');
+    const sendLines = document.getElementById('sendLines');
+    const sendTotal = document.getElementById('sendTotal');
+    const sendConfirm = document.getElementById('sendConfirm');
+    const tablePick = document.getElementById('tablePick');
+    const tableCounts = document.getElementById('tableCounts');
+    const toastEl = document.getElementById('toast');
+
+    function timeOf(iso) {
+      return new Date(iso).toLocaleTimeString('mk-MK', { hour: '2-digit', minute: '2-digit' });
+    }
+    function dateTimeOf(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('mk-MK', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + timeOf(iso);
+    }
+
+    let toastTimer = null;
+    function toast(text) {
+      toastEl.textContent = text;
+      toastEl.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 3800);
+    }
+
+    function summaryLine(name, qty, lineTotal) {
+      const line = document.createElement('div');
+      line.className = 'summary-line';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'summary-line-name';
+      nameEl.textContent = name + ' ';
+      const qtyEl = document.createElement('span');
+      qtyEl.className = 'summary-line-qty';
+      qtyEl.textContent = '×' + qty;
+      nameEl.appendChild(qtyEl);
+      const priceEl = document.createElement('span');
+      priceEl.className = 'summary-line-price';
+      priceEl.textContent = formatDen(lineTotal);
+      line.appendChild(nameEl);
+      line.appendChild(priceEl);
+      return line;
+    }
+
+    function openOverlay(el) {
+      if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
+      closeSuggestion();
+      el.classList.add('visible');
+      el.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+    }
+    function closeOverlay(el) {
+      el.classList.remove('visible');
+      el.setAttribute('aria-hidden', 'true');
+      if (!document.querySelector('.waiter-overlay.visible')) document.body.classList.remove('modal-open');
+    }
+
+    // ---- SEND ----
+    for (let n = 1; n <= Ledger.TABLES; n++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'split-count-btn';
+      b.textContent = n;
+      b.dataset.table = n;
+      b.setAttribute('aria-label', 'Маса ' + n);
+      b.addEventListener('click', function () {
+        pickedTable = Number(this.dataset.table);
+        renderSend();
+      });
+      tableCounts.appendChild(b);
+    }
+
+    function renderSend() {
+      // A table fixed by the QR code cannot be changed from the phone.
+      tablePick.hidden = !!urlTable;
+      tableCounts.querySelectorAll('.split-count-btn').forEach(b => {
+        const on = Number(b.dataset.table) === pickedTable;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      document.getElementById('sendTitle').textContent =
+        pickedTable ? 'НАРАЧКА · МАСА ' + pickedTable : 'ИСПРАТИ НАРАЧКА';
+      sendConfirm.disabled = !pickedTable;
+      sendConfirm.textContent = pickedTable ? 'Испрати во кујна' : 'Изберете маса';
+    }
+
+    window.openSend = function () {
       const names = Object.keys(cart);
       if (names.length === 0) {
         alert('Нарачката е празна. Додајте нешто прво.');
         return;
       }
-
-      waiterLines.innerHTML = '';
+      sendLines.innerHTML = '';
       let total = 0;
       names.forEach(function (name) {
         const item = cart[name];
-        const lineTotal = item.price * item.qty;
-        total += lineTotal;
-
-        const line = document.createElement('div');
-        line.className = 'summary-line';
-
-        const nameEl = document.createElement('span');
-        nameEl.className = 'summary-line-name';
-        nameEl.textContent = name + ' ';
-        const qtyEl = document.createElement('span');
-        qtyEl.className = 'summary-line-qty';
-        qtyEl.textContent = '×' + item.qty;
-        nameEl.appendChild(qtyEl);
-
-        const priceEl = document.createElement('span');
-        priceEl.className = 'summary-line-price';
-        priceEl.textContent = formatDen(lineTotal);
-
-        line.appendChild(nameEl);
-        line.appendChild(priceEl);
-        waiterLines.appendChild(line);
+        total += item.price * item.qty;
+        sendLines.appendChild(summaryLine(name, item.qty, item.price * item.qty));
       });
-
-      waiterTotal.textContent = formatDen(total);
-      billTotal = total;
-      renderSplit();
-
-      if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
-      closeSuggestion();
-      waiterOverlay.classList.add('visible');
-      waiterOverlay.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('modal-open');
+      sendTotal.textContent = formatDen(total);
+      pickedTable = table;
+      renderSend();
+      openOverlay(sendOverlay);
     };
+    window.closeSend = function () { closeOverlay(sendOverlay); };
+
+    window.confirmSend = function () {
+      if (!pickedTable || !Object.keys(cart).length) return;
+      const items = Object.keys(cart).map(name => ({
+        name: name, price: cart[name].price, qty: cart[name].qty, category: cart[name].category
+      }));
+      let ev;
+      try {
+        ev = Ledger.append('round', { table: pickedTable, items: items, by: 'guest' });
+      } catch (e) {
+        alert('Нарачката не е испратена: ' + e.message);
+        return;
+      }
+      table = pickedTable;
+      try {
+        sessionStorage.setItem(TABLE_KEY, String(table));
+        sessionStorage.setItem(BILL_KEY, String(Ledger.state().rounds[ev.seq].billId));
+      } catch (e) { /* ignore */ }
+      cart = {};
+      renderCart();
+      closeOverlay(sendOverlay);
+      toast('✓ Испратено во ' + timeOf(ev.at) + ' · Маса ' + table + ' · нарачка бр. ' + ev.seq);
+    };
+
+    // ---- THE BILL ----
+    /* The bill this phone is following: the table's open bill, or the one
+       it last ordered on, so a guest still sees "paid" after the waiter
+       closes it. */
+    function currentBill() {
+      if (!table) return null;
+      const st = Ledger.state();
+      const openId = st.openByTable[table];
+      if (openId) return st.bills[openId];
+      let last = null;
+      try { last = Number(sessionStorage.getItem(BILL_KEY)) || null; } catch (e) { /* ignore */ }
+      return last && st.bills[last] ? st.bills[last] : null;
+    }
+
+    const STATUS_LABEL = { new: 'Испратена', accepted: 'Примена', served: 'Сервирана' };
+
+    function renderBill() {
+      const chip = document.getElementById('cartTable');
+      chip.hidden = !table;
+      chip.textContent = table ? 'Маса ' + table : '';
+
+      const bill = currentBill();
+      const mini = document.getElementById('billMini');
+      mini.hidden = !bill;
+      if (bill) {
+        const n = bill.rounds.length;
+        document.getElementById('billMiniText').textContent = bill.status === 'closed'
+          ? 'Сметката е платена'
+          : 'Испратено: ' + n + (n === 1 ? ' нарачка' : ' нарачки');
+        document.getElementById('billMiniTotal').textContent = formatDen(bill.total);
+      }
+
+      document.getElementById('waiterTitle').textContent = table ? 'СМЕТКА · МАСА ' + table : 'СМЕТКА';
+      waiterLines.innerHTML = '';
+      const stamp = document.getElementById('paidStamp');
+      const reqBtn = document.getElementById('requestBill');
+      billTotal = bill ? bill.total : 0;
+      waiterTotal.textContent = formatDen(billTotal);
+
+      if (!bill) {
+        stamp.hidden = true;
+        reqBtn.hidden = true;
+      } else {
+        bill.rounds.forEach(function (r, idx) {
+          const block = document.createElement('div');
+          block.className = 'round-block';
+          const head = document.createElement('div');
+          head.className = 'round-head';
+          const left = document.createElement('span');
+          left.textContent = '🔒 Нарачка ' + (idx + 1) + ' · ' + timeOf(r.at) + (r.by === 'waiter' ? ' · келнер' : '');
+          const status = document.createElement('span');
+          status.className = 'round-status ' + r.status;
+          status.textContent = STATUS_LABEL[r.status];
+          head.appendChild(left);
+          head.appendChild(status);
+          block.appendChild(head);
+          r.items.forEach(it => block.appendChild(summaryLine(it.name, it.qty, it.price * it.qty)));
+          waiterLines.appendChild(block);
+        });
+        if (bill.status === 'closed') {
+          stamp.hidden = false;
+          stamp.textContent = 'ПЛАТЕНО · Сметка бр. ' + String(bill.number).padStart(4, '0') + ' · ' + dateTimeOf(bill.closedAt);
+          reqBtn.hidden = true;
+        } else {
+          stamp.hidden = true;
+          reqBtn.hidden = false;
+          reqBtn.disabled = !!bill.requestedAt;
+          reqBtn.textContent = bill.requestedAt
+            ? 'Келнерот е повикан · ' + timeOf(bill.requestedAt)
+            : 'Повикај келнер за плаќање';
+        }
+      }
+
+      // Unsent dishes are not on the bill, and the guest should know it.
+      const draftCount = Object.keys(cart).reduce((q, n) => q + cart[n].qty, 0);
+      const draftNote = document.getElementById('draftNote');
+      draftNote.hidden = draftCount === 0;
+      draftNote.textContent = draftCount
+        ? 'Имате ' + draftCount + (draftCount === 1 ? ' ставка' : ' ставки') + ' во корпата што уште не се испратени — не се на сметката.'
+        : '';
+      renderSplit();
+    }
+
+    window.showToWaiter = function() {
+      renderBill();
+      if (!currentBill()) {
+        alert('Сè уште немате испратено нарачка.');
+        return;
+      }
+      openOverlay(waiterOverlay);
+    };
+
+    window.requestBill = function () {
+      const bill = currentBill();
+      if (!bill || bill.status !== 'open' || bill.requestedAt) return;
+      try { Ledger.append('bill_request', { bill: bill.id }); }
+      catch (e) { alert(e.message); return; }
+      toast('Келнерот е повикан на маса ' + table);
+    };
+
+    // The staff screen accepts, serves and closes; the guest sees it live.
+    let knownStatus = null;
+    Ledger.onChange(function () {
+      const bill = currentBill();
+      if (bill && knownStatus && knownStatus.id === bill.id && knownStatus.status !== bill.status && bill.status === 'closed') {
+        toast('Сметката е платена. Ви благодариме!');
+      }
+      knownStatus = bill ? { id: bill.id, status: bill.status } : null;
+      renderBill();
+    });
 
     /* ---- SPLIT THE BILL ----
        Denars have no subunit in practice, so an uneven total is settled the
@@ -2280,37 +2656,35 @@
       }
     }
 
-    window.closeWaiterSummary = function() {
-      waiterOverlay.classList.remove('visible');
-      waiterOverlay.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('modal-open');
-    };
+    window.closeWaiterSummary = function() { closeOverlay(waiterOverlay); };
+
+    sendOverlay.addEventListener('click', function (e) {
+      if (e.target === sendOverlay) window.closeSend();
+    });
 
     waiterOverlay.addEventListener('click', function (e) {
       if (e.target === waiterOverlay) window.closeWaiterSummary();
     });
 
     // ---- BUTTONS: DELETE ----
+    // Only the unsent draft can be thrown away. Sent orders are on the bill.
     window.clearOrder = function() {
       if (Object.keys(cart).length === 0) {
-        alert('Нарачката е веќе празна.');
+        alert('Корпата е веќе празна.');
         return;
       }
-      if (!confirm('Дали сте сигурни дека сакате да ја избришете нарачката?')) return;
+      if (!confirm('Да ги избришам неиспратените ставки од корпата?')) return;
       cart = {};
-      splitCount = 1;
-      billTotal = 0;
-      renderSplit();   // repaint, so a reopened summary does not show the old head count
       if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null; }
       closeSuggestion();
-      window.closeWaiterSummary();
       renderCart();
     };
 
     // Escape closes whichever sheet is on top.
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
-      if (waiterOverlay.classList.contains('visible')) window.closeWaiterSummary();
+      if (sendOverlay.classList.contains('visible')) window.closeSend();
+      else if (waiterOverlay.classList.contains('visible')) window.closeWaiterSummary();
       else if (suggestOpen) closeSuggestion();
     });
 
@@ -2397,6 +2771,7 @@
 
     // ---- INIT ----
     loadSuggestState();
+    knownStatus = (function (b) { return b ? { id: b.id, status: b.status } : null; })(currentBill());
     renderCart();
 
     // Track the order bar's height so the sheet always clears it, including

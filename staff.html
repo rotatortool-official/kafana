@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мојата Кафана - Каса</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Marcellus&display=swap" rel="stylesheet">
+  <style>
+    /* Same palette as the menu. This screen lives on the PC at the bar, so
+       it is laid out for a wide screen first and still works on a tablet. */
+    :root {
+      --bg-dark: #0d1117;
+      --header-bg: #161b22;
+      --accent-gold: #f3ba2f;
+      --text-light: #f0f6fc;
+      --text-muted: #8b949e;
+      --card-bg: #21262d;
+      --border-color: #30363d;
+      --blue: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --font-display: 'Cinzel', Georgia, serif;
+      --font-label: 'Marcellus', Georgia, serif;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg-dark);
+      color: var(--text-light);
+      min-height: 100vh;
+    }
+    button { font: inherit; color: inherit; }
+
+    /* ----- TOP BAR ----- */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 20px;
+      padding: 12px 20px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--accent-gold);
+    }
+    .brand { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--accent-gold); letter-spacing: 1px; }
+    .brand small { font-family: var(--font-label); font-weight: 400; font-size: 0.8rem; color: var(--text-muted); letter-spacing: 2px; margin-left: 8px; text-transform: uppercase; }
+    .tabs { display: flex; gap: 6px; }
+    .tab {
+      padding: 8px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: none;
+      cursor: pointer;
+      font-family: var(--font-label);
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+    .tab.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .tab .count { display: inline-block; min-width: 20px; margin-left: 6px; padding: 0 6px; border-radius: 10px; background: var(--accent-gold); color: var(--bg-dark); font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700; }
+    .spacer { flex: 1; }
+    .who { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); }
+    .who select {
+      padding: 7px 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+    .who select.missing { border-color: var(--red); }
+    .clock { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+    .seal { font-size: 0.8rem; color: var(--green); white-space: nowrap; }
+    .seal.broken { color: var(--red); font-weight: 700; }
+
+    .tamper {
+      padding: 12px 20px;
+      background: rgba(248,81,73,0.15);
+      border-bottom: 1px solid var(--red);
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    main { padding: 20px; }
+
+    /* ----- TABLES VIEW ----- */
+    .floor { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 20px; align-items: start; }
+    .tables {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .table-card {
+      position: relative;
+      min-height: 116px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--card-bg);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .15s, transform .15s;
+    }
+    .table-card:hover { border-color: var(--text-muted); }
+    .table-card.selected { border-color: var(--accent-gold); box-shadow: 0 0 0 1px var(--accent-gold); }
+    .table-card.free { background: transparent; border-style: dashed; }
+    .table-no { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; }
+    .table-state { margin-top: 2px; font-family: var(--font-label); font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+    .table-total { margin-top: 10px; font-family: var(--font-display); font-weight: 700; color: var(--accent-gold); }
+    .table-since { font-size: 0.75rem; color: var(--text-muted); }
+    .table-card.has-new { border-color: var(--accent-gold); animation: pulse 1.4s ease-in-out infinite; }
+    .table-card.has-new .table-state { color: var(--accent-gold); }
+    .table-card.wants-bill .table-state { color: var(--green); }
+    .table-card.wants-bill { border-color: var(--green); }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(243,186,47,0); }
+      50% { box-shadow: 0 0 18px 2px rgba(243,186,47,0.45); }
+    }
+
+    .panel {
+      position: sticky;
+      top: 78px;
+      max-height: calc(100vh - 98px);
+      overflow-y: auto;
+      padding: 18px;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background: var(--header-bg);
+    }
+    .panel-empty { color: var(--text-muted); text-align: center; padding: 40px 10px; line-height: 1.6; }
+    .panel-title { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--accent-gold); }
+    .panel-sub { margin-top: 2px; font-size: 0.85rem; color: var(--text-muted); }
+    .round {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--card-bg);
+    }
+    .round.new { border-color: var(--accent-gold); }
+    .round-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; font-size: 0.82rem; color: var(--text-muted); }
+    .round-head b { color: var(--text-light); font-weight: 600; }
+    .line { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dotted var(--border-color); font-size: 0.92rem; }
+    .line:last-of-type { border-bottom: none; }
+    .line .qty { color: var(--accent-gold); font-weight: 700; margin-left: 4px; }
+    .line .amt { white-space: nowrap; font-weight: 600; }
+    .round-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
+    .pill { font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; border: 1px solid currentColor; white-space: nowrap; }
+    .pill.new { color: var(--accent-gold); }
+    .pill.accepted { color: var(--blue); }
+    .pill.served { color: var(--green); }
+    .btn {
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      cursor: pointer;
+      font-family: var(--font-label);
+      letter-spacing: 0.5px;
+      font-size: 0.9rem;
+    }
+    .btn:hover { border-color: var(--text-muted); }
+    .btn.gold { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-dark); font-weight: 700; }
+    .btn.green { background: var(--green); border-color: var(--green); color: #04130a; font-weight: 700; }
+    .btn.small { padding: 6px 10px; font-size: 0.8rem; }
+    .btn:disabled { opacity: 0.45; cursor: default; }
+    .bill-total { display: flex; justify-content: space-between; margin-top: 16px; padding-top: 12px; border-top: 2px solid var(--accent-gold); font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; }
+    .bill-total span:last-child { color: var(--accent-gold); }
+    .panel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .rule { margin-top: 12px; font-size: 0.8rem; line-height: 1.5; color: var(--text-muted); }
+
+    /* ----- REPORT / LOG ----- */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat { padding: 14px 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--card-bg); }
+    .stat-label { font-family: var(--font-label); font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+    .stat-value { margin-top: 6px; font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--accent-gold); }
+    h2 { font-family: var(--font-display); font-size: 1.1rem; margin: 22px 0 10px; color: var(--text-light); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+    th { font-family: var(--font-label); font-weight: 400; letter-spacing: 1px; color: var(--text-muted); background: var(--header-bg); }
+    td.num, th.num { text-align: right; }
+    tr:last-child td { border-bottom: none; }
+    td.wrap { white-space: normal; min-width: 260px; }
+    .mono { font-family: Consolas, monospace; font-size: 0.8rem; color: var(--text-muted); }
+    .muted { color: var(--text-muted); }
+    .day-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .day-nav b { font-family: var(--font-display); min-width: 130px; text-align: center; }
+
+    /* ----- MODALS ----- */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(3,6,10,0.8);
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 22px;
+      border: 1px solid var(--accent-gold);
+      border-radius: 14px;
+      background: var(--header-bg);
+    }
+    .modal-box.wide { max-width: 860px; }
+    .modal-title { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; color: var(--accent-gold); margin-bottom: 4px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+    .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .pay-methods .btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .warn { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--red); border-radius: 8px; color: var(--text-light); font-size: 0.88rem; line-height: 1.5; }
+
+    .add-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; margin-top: 12px; }
+    .search { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-light); font-size: 0.95rem; }
+    .catalog { margin-top: 10px; max-height: 52vh; overflow-y: auto; }
+    .cat-item { display: flex; width: 100%; justify-content: space-between; gap: 10px; padding: 8px 10px; border: none; border-bottom: 1px dotted var(--border-color); background: none; cursor: pointer; text-align: left; font-size: 0.9rem; }
+    .cat-item:hover { background: var(--card-bg); }
+    .cat-item span:last-child { color: var(--accent-gold); white-space: nowrap; }
+    .draft { padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--card-bg); }
+    .draft .line button { border: none; background: none; cursor: pointer; color: var(--text-muted); padding: 0 4px; }
+
+    /* ----- RECEIPT (printable) ----- */
+    .receipt { font-family: Consolas, 'Courier New', monospace; font-size: 0.9rem; line-height: 1.5; color: #111; background: #fff; padding: 18px; border-radius: 6px; }
+    .receipt h3 { text-align: center; font-size: 1.05rem; }
+    .receipt .r-line { display: flex; justify-content: space-between; gap: 10px; }
+    .receipt hr { border: none; border-top: 1px dashed #777; margin: 8px 0; }
+    .receipt .r-total { font-weight: 700; font-size: 1.05rem; }
+
+    .demo-foot { margin-top: 30px; padding: 14px 20px; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
+    .demo-foot a { color: var(--accent-gold); }
+
+    @media (max-width: 1000px) {
+      .floor { grid-template-columns: 1fr; }
+      .panel { position: static; max-height: none; }
+      .add-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body * { visibility: hidden; }
+      .receipt, .receipt * { visibility: visible; }
+      .receipt { position: absolute; left: 0; top: 0; width: 80mm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Мојата Кафана <small>Каса</small></div>
+    <nav class="tabs">
+      <button class="tab active" data-view="floor" type="button">Маси<span class="count" id="newCount" hidden></span></button>
+      <button class="tab" data-view="report" type="button">Дневен извештај</button>
+      <button class="tab" data-view="log" type="button">Дневник</button>
+    </nav>
+    <div class="spacer"></div>
+    <label class="who">Келнер
+      <select id="waiter">
+        <option value="">— изберете —</option>
+        <option>Ана</option>
+        <option>Марко</option>
+        <option>Елена</option>
+        <option>Горан</option>
+        <option>Газда</option>
+      </select>
+    </label>
+    <span class="seal" id="seal">✓ Историјата е непроменета</span>
+    <span class="clock" id="clock"></span>
+  </header>
+  <div class="tamper" id="tamper" hidden></div>
+
+  <main>
+    <!-- TABLES -->
+    <section id="view-floor">
+      <div class="floor">
+        <div class="tables" id="tables"></div>
+        <aside class="panel" id="panel"></aside>
+      </div>
+    </section>
+
+    <!-- DAILY REPORT -->
+    <section id="view-report" hidden>
+      <div class="day-nav">
+        <button class="btn small" type="button" id="dayPrev">‹</button>
+        <b id="dayLabel"></b>
+        <button class="btn small" type="button" id="dayNext">›</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <h2>Затворени сметки</h2>
+      <div class="table-wrap"><table id="billsTable"></table></div>
+      <h2>По келнер</h2>
+      <div class="table-wrap"><table id="waiterTable"></table></div>
+    </section>
+
+    <!-- AUDIT LOG -->
+    <section id="view-log" hidden>
+      <p class="muted" style="margin-bottom:12px">Секој настан е запишан еднаш, со време и печат. Нема копче за менување или бришење — ниту за газдата.</p>
+      <div class="table-wrap"><table id="logTable"></table></div>
+    </section>
+  </main>
+
+  <footer class="demo-foot">
+    <span>ДЕМО: менито и касата делат податоци само во ист прелистувач. Отворете го <a href="index.html?table=5" target="_blank">менито за маса 5</a> во друго јазиче.</span>
+    <span class="spacer"></span>
+    <button class="btn small" type="button" id="resetDemo">Почни демо од почеток</button>
+  </footer>
+
+  <div class="modal" id="modal" hidden><div class="modal-box" id="modalBox"></div></div>
+
+  <script src="ledger.js"></script>
+  <script>
+    // ---- HELPERS ----
+    const $ = id => document.getElementById(id);
+    function den(a) { const r = Math.round(a * 100) / 100; return (Number.isInteger(r) ? r : r.toFixed(2)).toLocaleString('mk-MK') + ' ден'; }
+    function timeOf(iso) { return new Date(iso).toLocaleTimeString('mk-MK', { hour: '2-digit', minute: '2-digit' }); }
+    function dateOf(d) { return new Date(d).toLocaleDateString('mk-MK', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+    function el(tag, cls, text) {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+    function billNo(n) { return String(n).padStart(4, '0'); }
+    const STATUS_LABEL = { new: 'Нова', accepted: 'Примена', served: 'Сервирана' };
+    const NEXT_STATUS = { new: ['accepted', 'Прифати'], accepted: ['served', 'Сервирано'] };
+    const METHOD_LABEL = { cash: 'Готовина', card: 'Картичка' };
+
+    const waiterSel = $('waiter');
+    try { waiterSel.value = localStorage.getItem('kafana.staff.waiter') || ''; } catch (e) { /* ignore */ }
+    waiterSel.addEventListener('change', function () {
+      try { localStorage.setItem('kafana.staff.waiter', waiterSel.value); } catch (e) { /* ignore */ }
+      waiterSel.classList.remove('missing');
+    });
+    /* Every staff action carries a name. No name, no action. */
+    function waiter() {
+      if (!waiterSel.value) {
+        waiterSel.classList.add('missing');
+        waiterSel.focus();
+        alert('Прво изберете кој келнер работи (горе десно).');
+        return null;
+      }
+      return waiterSel.value;
+    }
+    function act(type, data) {
+      try { return Ledger.append(type, data); }
+      catch (e) { alert(e.message); return null; }
+    }
+
+    let selected = null;
+    let view = 'floor';
+
+    // ---- TABLES ----
+    function renderTables(st) {
+      const box = $('tables');
+      box.innerHTML = '';
+      let newRounds = 0;
+      for (let t = 1; t <= Ledger.TABLES; t++) {
+        const bill = st.bills[st.openByTable[t]];
+        const card = el('button', 'table-card');
+        card.type = 'button';
+        card.appendChild(el('div', 'table-no', t));
+        if (!bill) {
+          card.classList.add('free');
+          card.appendChild(el('div', 'table-state', 'Слободна'));
+        } else {
+          const fresh = bill.rounds.filter(r => r.status === 'new').length;
+          newRounds += fresh;
+          let state = 'Отворена';
+          if (fresh) { card.classList.add('has-new'); state = fresh === 1 ? 'Нова нарачка' : fresh + ' нови нарачки'; }
+          else if (bill.requestedAt) { card.classList.add('wants-bill'); state = 'Бара сметка'; }
+          card.appendChild(el('div', 'table-state', state));
+          card.appendChild(el('div', 'table-total', den(bill.total)));
+          card.appendChild(el('div', 'table-since', 'од ' + timeOf(bill.openedAt) + ' · ' + bill.rounds.length + ' нар.'));
+        }
+        if (selected === t) card.classList.add('selected');
+        card.addEventListener('click', function () { selected = t; render(); });
+        box.appendChild(card);
+      }
+      $('newCount').hidden = !newRounds;
+      $('newCount').textContent = newRounds;
+      document.title = (newRounds ? '(' + newRounds + ') ' : '') + 'Мојата Кафана - Каса';
+    }
+
+    function renderPanel(st) {
+      const p = $('panel');
+      p.innerHTML = '';
+      if (!selected) {
+        p.appendChild(el('div', 'panel-empty', 'Изберете маса за да ги видите нарачките, да ги прифатите или да ја затворите сметката.'));
+        return;
+      }
+      const bill = st.bills[st.openByTable[selected]];
+      p.appendChild(el('div', 'panel-title', 'Маса ' + selected));
+      if (!bill) {
+        p.appendChild(el('div', 'panel-sub', 'Слободна — нема отворена сметка.'));
+        const actions = el('div', 'panel-actions');
+        const add = el('button', 'btn gold', '+ Нова нарачка');
+        add.type = 'button';
+        add.addEventListener('click', () => openAdd(selected));
+        actions.appendChild(add);
+        p.appendChild(actions);
+        return;
+      }
+      p.appendChild(el('div', 'panel-sub', 'Сметка отворена ' + dateOf(bill.openedAt) + ' во ' + timeOf(bill.openedAt) +
+        (bill.requestedAt ? ' · бара сметка од ' + timeOf(bill.requestedAt) : '')));
+
+      bill.rounds.forEach(function (r, i) {
+        const box = el('div', 'round ' + r.status);
+        const head = el('div', 'round-head');
+        const left = el('span');
+        left.appendChild(el('b', null, '🔒 Нарачка ' + (i + 1)));
+        left.appendChild(document.createTextNode(' · ' + timeOf(r.at) + ' · ' + (r.by === 'guest' ? 'гостин (QR)' : 'келнер ' + r.waiter)));
+        head.appendChild(left);
+        head.appendChild(el('span', 'mono', '#' + r.seq));
+        box.appendChild(head);
+        r.items.forEach(function (it) {
+          const line = el('div', 'line');
+          const name = el('span', null, it.name);
+          name.appendChild(el('span', 'qty', ' ×' + it.qty));
+          line.appendChild(name);
+          line.appendChild(el('span', 'amt', den(it.price * it.qty)));
+          box.appendChild(line);
+        });
+        const foot = el('div', 'round-foot');
+        foot.appendChild(el('span', 'pill ' + r.status, STATUS_LABEL[r.status] + (r.statusBy ? ' · ' + r.statusBy + ' ' + timeOf(r.statusAt) : '')));
+        const next = NEXT_STATUS[r.status];
+        if (next) {
+          const b = el('button', 'btn small ' + (r.status === 'new' ? 'gold' : ''), next[1]);
+          b.type = 'button';
+          b.addEventListener('click', function () {
+            const w = waiter(); if (!w) return;
+            act('status', { round: r.seq, status: next[0], waiter: w });
+          });
+          foot.appendChild(b);
+        }
+        box.appendChild(foot);
+        p.appendChild(box);
+      });
+
+      const total = el('div', 'bill-total');
+      total.appendChild(el('span', null, 'Вкупно'));
+      total.appendChild(el('span', null, den(bill.total)));
+      p.appendChild(total);
+
+      const actions = el('div', 'panel-actions');
+      const add = el('button', 'btn', '+ Додај нарачка');
+      add.type = 'button';
+      add.addEventListener('click', () => openAdd(selected));
+      const close = el('button', 'btn green', 'Наплати и затвори');
+      close.type = 'button';
+      close.addEventListener('click', () => openClose(bill.id));
+      actions.appendChild(add);
+      actions.appendChild(close);
+      p.appendChild(actions);
+      p.appendChild(el('p', 'rule', 'Испратените нарачки не можат да се менуваат или бришат. Ако гостинот сака уште нешто, се додава нова нарачка.'));
+    }
+
+    // ---- MODAL ----
+    function openModal(build, wide) {
+      const box = $('modalBox');
+      box.innerHTML = '';
+      box.classList.toggle('wide', !!wide);
+      build(box);
+      $('modal').hidden = false;
+    }
+    function closeModal() { $('modal').hidden = true; }
+    $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ---- CLOSE THE BILL ----
+    function openClose(billId) {
+      if (!waiter()) return;
+      const bill = Ledger.state().bills[billId];
+      let method = null;
+      openModal(function (box) {
+        box.appendChild(el('div', 'modal-title', 'Наплати · Маса ' + bill.table));
+        box.appendChild(el('div', 'panel-sub', bill.rounds.length + ' нарачки · келнер ' + waiterSel.value));
+        const total = el('div', 'bill-total');
+        total.appendChild(el('span', null, 'За плаќање'));
+        total.appendChild(el('span', null, den(bill.total)));
+        box.appendChild(total);
+        const methods = el('div', 'pay-methods');
+        const confirmBtn = el('button', 'btn green', 'Затвори сметка');
+        confirmBtn.type = 'button';
+        confirmBtn.disabled = true;
+        ['cash', 'card'].forEach(function (m) {
+          const b = el('button', 'btn', METHOD_LABEL[m]);
+          b.type = 'button';
+          b.addEventListener('click', function () {
+            method = m;
+            methods.querySelectorAll('.btn').forEach(x => x.classList.toggle('active', x === b));
+            confirmBtn.disabled = false;
+          });
+          methods.appendChild(b);
+        });
+        box.appendChild(methods);
+        box.appendChild(el('p', 'warn', 'По затворање сметката добива број и е конечна: износот, ставките и времето не можат да се менуваат, а сметката не може повторно да се отвори.'));
+        const actions = el('div', 'modal-actions');
+        const cancel = el('button', 'btn', 'Откажи');
+        cancel.type = 'button';
+        cancel.addEventListener('click', closeModal);
+        confirmBtn.addEventListener('click', function () {
+          const w = waiter(); if (!w || !method) return;
+          const ev = act('close', { bill: billId, method: method, waiter: w });
+          if (ev) showReceipt(billId);
+        });
+        actions.appendChild(cancel);
+        actions.appendChild(confirmBtn);
+        box.appendChild(actions);
+      });
+    }
+
+    function showReceipt(billId) {
+      const bill = Ledger.state().bills[billId];
+      openModal(function (box) {
+        box.appendChild(el('div', 'modal-title', 'Сметка бр. ' + billNo(bill.number)));
+        const r = el('div', 'receipt');
+        r.appendChild(el('h3', null, 'МОЈАТА КАФАНА'));
+        r.appendChild(el('div', null, 'Сметка бр. ' + billNo(bill.number) + ' · Маса ' + bill.table));
+        r.appendChild(el('div', null, 'Отворена: ' + dateOf(bill.openedAt) + ' ' + timeOf(bill.openedAt)));
+        r.appendChild(el('div', null, 'Затворена: ' + dateOf(bill.closedAt) + ' ' + timeOf(bill.closedAt)));
+        r.appendChild(el('div', null, 'Келнер: ' + bill.closedBy + ' · ' + METHOD_LABEL[bill.method]));
+        bill.rounds.forEach(function (round, i) {
+          r.appendChild(el('hr'));
+          r.appendChild(el('div', null, 'Нарачка ' + (i + 1) + ' · ' + timeOf(round.at)));
+          round.items.forEach(function (it) {
+            const l = el('div', 'r-line');
+            l.appendChild(el('span', null, it.qty + ' × ' + it.name));
+            l.appendChild(el('span', null, den(it.price * it.qty)));
+            r.appendChild(l);
+          });
+        });
+        r.appendChild(el('hr'));
+        const t = el('div', 'r-line r-total');
+        t.appendChild(el('span', null, 'ВКУПНО'));
+        t.appendChild(el('span', null, den(bill.total)));
+        r.appendChild(t);
+        box.appendChild(r);
+        const actions = el('div', 'modal-actions');
+        const print = el('button', 'btn', 'Печати');
+        print.type = 'button';
+        print.addEventListener('click', () => window.print());
+        const done = el('button', 'btn gold', 'Готово');
+        done.type = 'button';
+        done.addEventListener('click', closeModal);
+        actions.appendChild(print);
+        actions.appendChild(done);
+        box.appendChild(actions);
+      });
+    }
+
+    // ---- WAITER ADDS AN ORDER ----
+    /* Prices come from the menu itself, never typed in by hand, so a
+       coffee always costs what the menu says it costs. */
+    let catalog = [];
+    function loadCatalog() {
+      return fetch('index.html', { cache: 'no-store' })
+        .then(r => r.text())
+        .then(function (html) {
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const seen = new Set();
+          catalog = [];
+          doc.querySelectorAll('.menu-item, .chef-details').forEach(function (c) {
+            const n = c.querySelector('.item-name'), pr = c.querySelector('.item-price');
+            if (!n || !pr) return;
+            const clone = n.cloneNode(true);
+            clone.querySelectorAll('.badge').forEach(b => b.remove());
+            const name = clone.textContent.replace(/\s+/g, ' ').trim();
+            const m = pr.textContent.replace(/ /g, ' ').match(/[\d.,]+/);
+            const price = m ? parseFloat(m[0].replace(',', '.')) : 0;
+            const holder = c.dataset.category ? c : c.closest('[data-category]');
+            if (!name || !price || seen.has(name)) return;
+            seen.add(name);
+            catalog.push({ name: name, price: price, category: holder ? holder.dataset.category : '' });
+          });
+        })
+        .catch(function () { catalog = []; });
+    }
+
+    function openAdd(table) {
+      if (!waiter()) return;
+      const draft = {};
+      openModal(function (box) {
+        box.appendChild(el('div', 'modal-title', 'Нова нарачка · Маса ' + table));
+        box.appendChild(el('div', 'panel-sub', 'Внесува: ' + waiterSel.value + ' · се запишува со време и име'));
+        const grid = el('div', 'add-grid');
+        const left = el('div');
+        const search = el('input', 'search');
+        search.placeholder = 'Пребарај: кафе, пиво, ќебапи…';
+        left.appendChild(search);
+        const list = el('div', 'catalog');
+        left.appendChild(list);
+        const right = el('div', 'draft');
+        grid.appendChild(left);
+        grid.appendChild(right);
+        box.appendChild(grid);
+
+        const actions = el('div', 'modal-actions');
+        const cancel = el('button', 'btn', 'Откажи');
+        cancel.type = 'button';
+        cancel.addEventListener('click', closeModal);
+        const send = el('button', 'btn gold', 'Испрати');
+        send.type = 'button';
+        actions.appendChild(cancel);
+        actions.appendChild(send);
+        box.appendChild(actions);
+
+        function renderList() {
+          const q = search.value.trim().toLowerCase();
+          list.innerHTML = '';
+          if (!catalog.length) {
+            list.appendChild(el('p', 'muted', 'Менито не можеше да се вчита. Отворете ја касата преку веб-адресата, не како датотека.'));
+            return;
+          }
+          catalog.filter(it => !q || it.name.toLowerCase().includes(q)).forEach(function (it) {
+            const b = el('button', 'cat-item');
+            b.type = 'button';
+            b.appendChild(el('span', null, it.name));
+            b.appendChild(el('span', null, den(it.price)));
+            b.addEventListener('click', function () {
+              if (!draft[it.name]) draft[it.name] = { name: it.name, price: it.price, category: it.category, qty: 0 };
+              draft[it.name].qty++;
+              renderDraft();
+            });
+            list.appendChild(b);
+          });
+        }
+        function renderDraft() {
+          right.innerHTML = '';
+          const names = Object.keys(draft);
+          let sum = 0;
+          if (!names.length) right.appendChild(el('p', 'muted', 'Кликнете на ставка за да ја додадете.'));
+          names.forEach(function (n) {
+            const it = draft[n];
+            sum += it.price * it.qty;
+            const line = el('div', 'line');
+            const name = el('span', null, n);
+            name.appendChild(el('span', 'qty', ' ×' + it.qty));
+            const minus = el('button', null, '−');
+            minus.type = 'button';
+            minus.setAttribute('aria-label', 'Намали');
+            minus.addEventListener('click', function () {
+              if (--draft[n].qty <= 0) delete draft[n];
+              renderDraft();
+            });
+            name.appendChild(minus);
+            line.appendChild(name);
+            line.appendChild(el('span', 'amt', den(it.price * it.qty)));
+            right.appendChild(line);
+          });
+          const t = el('div', 'bill-total');
+          t.appendChild(el('span', null, 'Вкупно'));
+          t.appendChild(el('span', null, den(sum)));
+          right.appendChild(t);
+          send.disabled = !names.length;
+        }
+        send.addEventListener('click', function () {
+          const w = waiter(); if (!w) return;
+          const items = Object.keys(draft).map(n => draft[n]);
+          if (act('round', { table: table, items: items, by: 'waiter', waiter: w })) closeModal();
+        });
+        search.addEventListener('input', renderList);
+        renderList();
+        renderDraft();
+        setTimeout(() => search.focus(), 30);
+      }, true);
+    }
+
+    // ---- DAILY REPORT ----
+    let reportDay = new Date();
+    function sameDay(iso, day) { return new Date(iso).toDateString() === day.toDateString(); }
+    function renderReport(st) {
+      $('dayLabel').textContent = dateOf(reportDay);
+      const all = Object.values(st.bills);
+      const closed = all.filter(b => b.status === 'closed' && sameDay(b.closedAt, reportDay)).sort((a, b) => a.number - b.number);
+      const open = all.filter(b => b.status === 'open');
+      const sum = list => list.reduce((s, b) => s + b.total, 0);
+      const cash = sum(closed.filter(b => b.method === 'cash'));
+      const card = sum(closed.filter(b => b.method === 'card'));
+
+      const stats = $('stats');
+      stats.innerHTML = '';
+      [
+        ['Наплатено', den(cash + card)],
+        ['Готовина', den(cash)],
+        ['Картичка', den(card)],
+        ['Сметки', closed.length],
+        ['Отворени маси сега', open.length + (open.length === 1 ? ' маса · ' : ' маси · ') + den(sum(open))]
+      ].forEach(function (s) {
+        const box = el('div', 'stat');
+        box.appendChild(el('div', 'stat-label', s[0]));
+        box.appendChild(el('div', 'stat-value', s[1]));
+        stats.appendChild(box);
+      });
+
+      const bt = $('billsTable');
+      bt.innerHTML = '<tr><th>Бр.</th><th>Маса</th><th>Отворена</th><th>Затворена</th><th class="num">Нарачки</th><th>Наплатил</th><th>Начин</th><th class="num">Износ</th></tr>';
+      if (!closed.length) {
+        const tr = el('tr'); const td = el('td', 'muted', 'Нема затворени сметки за овој ден.'); td.colSpan = 8; tr.appendChild(td); bt.appendChild(tr);
+      }
+      closed.forEach(function (b) {
+        const tr = el('tr');
+        [billNo(b.number), b.table, timeOf(b.openedAt), timeOf(b.closedAt), b.rounds.length, b.closedBy, METHOD_LABEL[b.method], den(b.total)].forEach(function (v, i) {
+          tr.appendChild(el('td', i === 4 || i === 7 ? 'num' : null, v));
+        });
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => showReceipt(b.id));
+        bt.appendChild(tr);
+      });
+
+      // What each person entered and what each person took in.
+      const per = {};
+      const row = name => per[name] || (per[name] = { entered: 0, enteredSum: 0, closed: 0, cash: 0, card: 0 });
+      Object.values(st.rounds).forEach(function (r) {
+        if (r.by === 'waiter' && sameDay(r.at, reportDay)) { row(r.waiter).entered++; row(r.waiter).enteredSum += r.total; }
+      });
+      closed.forEach(function (b) { const x = row(b.closedBy); x.closed++; x[b.method] += b.total; });
+      const wt = $('waiterTable');
+      wt.innerHTML = '<tr><th>Келнер</th><th class="num">Внесени нарачки</th><th class="num">Вредност внесено</th><th class="num">Затворени сметки</th><th class="num">Готовина</th><th class="num">Картичка</th></tr>';
+      const names = Object.keys(per);
+      if (!names.length) {
+        const tr = el('tr'); const td = el('td', 'muted', 'Нема активност за овој ден.'); td.colSpan = 6; tr.appendChild(td); wt.appendChild(tr);
+      }
+      names.forEach(function (n) {
+        const x = per[n];
+        const tr = el('tr');
+        [n, x.entered, den(x.enteredSum), x.closed, den(x.cash), den(x.card)].forEach((v, i) => tr.appendChild(el('td', i ? 'num' : null, v)));
+        wt.appendChild(tr);
+      });
+    }
+    $('dayPrev').addEventListener('click', () => { reportDay = new Date(reportDay.getTime() - 86400000); render(); });
+    $('dayNext').addEventListener('click', () => { reportDay = new Date(reportDay.getTime() + 86400000); render(); });
+
+    // ---- AUDIT LOG ----
+    function describe(ev, st) {
+      const d = ev.data;
+      if (ev.type === 'round') {
+        return 'Маса ' + d.table + ' · нарачка од ' + (d.by === 'guest' ? 'гостин (QR)' : 'келнер ' + d.waiter) + ': ' +
+          d.items.map(it => it.qty + '× ' + it.name).join(', ') + ' = ' + den(d.total);
+      }
+      if (ev.type === 'status') {
+        const r = st.rounds[d.round];
+        return 'Нарачка #' + d.round + (r ? ' (маса ' + r.table + ')' : '') + ' → ' + STATUS_LABEL[d.status] + ' · ' + d.waiter;
+      }
+      if (ev.type === 'bill_request') {
+        const b = st.bills[d.bill];
+        return 'Маса ' + (b ? b.table : '?') + ' бара сметка';
+      }
+      if (ev.type === 'close') {
+        const b = st.bills[d.bill];
+        return 'Сметка бр. ' + billNo(d.number) + ' (маса ' + (b ? b.table : '?') + ') затворена · ' + METHOD_LABEL[d.method] + ' · ' + den(d.total) + ' · ' + d.waiter;
+      }
+      return ev.type;
+    }
+    function renderLog(st) {
+      const t = $('logTable');
+      t.innerHTML = '<tr><th>#</th><th>Датум</th><th>Време</th><th>Настан</th><th>Печат</th></tr>';
+      const events = Ledger.events().slice().reverse();
+      if (!events.length) {
+        const tr = el('tr'); const td = el('td', 'muted', 'Сè уште нема настани.'); td.colSpan = 5; tr.appendChild(td); t.appendChild(tr);
+      }
+      events.forEach(function (ev) {
+        const tr = el('tr');
+        tr.appendChild(el('td', 'mono', ev.seq));
+        tr.appendChild(el('td', null, dateOf(ev.at)));
+        tr.appendChild(el('td', null, new Date(ev.at).toLocaleTimeString('mk-MK')));
+        tr.appendChild(el('td', 'wrap', describe(ev, st)));
+        tr.appendChild(el('td', 'mono', ev.hash));
+        t.appendChild(tr);
+      });
+    }
+
+    // ---- RENDER ----
+    function renderSeal() {
+      const broken = Ledger.verify();
+      $('seal').classList.toggle('broken', !!broken);
+      $('seal').textContent = broken ? '✗ Историјата е менувана' : '✓ Историјата е непроменета';
+      $('tamper').hidden = !broken;
+      $('tamper').textContent = broken
+        ? 'Внимание: настан бр. ' + broken + ' е изменет или избришан надвор од системот. Сè од тој настан наваму не е доверливо.'
+        : '';
+    }
+
+    function render() {
+      const st = Ledger.state();
+      renderSeal();
+      renderTables(st);
+      renderPanel(st);
+      if (view === 'report') renderReport(st);
+      if (view === 'log') renderLog(st);
+    }
+
+    document.querySelectorAll('.tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        view = tab.dataset.view;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+        ['floor', 'report', 'log'].forEach(v => { $('view-' + v).hidden = v !== view; });
+        render();
+      });
+    });
+
+    // A short chime when a guest's order lands. Browsers only allow sound
+    // after the first click on the page, which the first action provides.
+    let audio = null;
+    document.addEventListener('click', function () {
+      if (!audio && window.AudioContext) audio = new AudioContext();
+    }, { once: true });
+    function chime() {
+      if (!audio) return;
+      [880, 1320].forEach(function (f, i) {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, audio.currentTime + i * 0.16);
+        g.gain.exponentialRampToValueAtTime(0.2, audio.currentTime + i * 0.16 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + i * 0.16 + 0.3);
+        o.connect(g); g.connect(audio.destination);
+        o.start(audio.currentTime + i * 0.16);
+        o.stop(audio.currentTime + i * 0.16 + 0.32);
+      });
+    }
+
+    let lastSeq = (Ledger.events().slice(-1)[0] || {}).seq || 0;
+    Ledger.onChange(function () {
+      const events = Ledger.events();
+      if (events.slice(lastSeq).some(ev => ev.type === 'round' && ev.data.by === 'guest')) chime();
+      lastSeq = events.length ? events[events.length - 1].seq : 0;
+      render();
+    });
+
+    $('resetDemo').addEventListener('click', function () {
+      if (!confirm('Демо: да се избришат сите нарачки и сметки и да се почне од нула? (Вистинската каса го нема ова копче.)')) return;
+      Ledger.resetDemo();
+      selected = null;
+    });
+
+    function tick() {
+      $('clock').textContent = new Date().toLocaleTimeString('mk-MK', { hour: '2-digit', minute: '2-digit' });
+    }
+    tick();
+    setInterval(tick, 15000);
+    setInterval(render, 60000);   // keeps "minutes since" and the day honest
+
+    loadCatalog();
+    render();
+  </script>
+</body>
+</html>
