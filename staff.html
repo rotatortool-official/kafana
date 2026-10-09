@@ -189,6 +189,42 @@
     td.wrap { white-space: normal; min-width: 260px; }
     .mono { font-family: Consolas, monospace; font-size: 0.8rem; color: var(--text-muted); }
     .muted { color: var(--text-muted); }
+    .filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 18px; }
+    .filters label { display: flex; flex-direction: column; gap: 5px; font-size: 0.78rem; color: var(--text-muted); }
+    .filters input, .filters select {
+      padding: 8px 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      color-scheme: dark;
+    }
+    .filters .quick { display: flex; gap: 6px; }
+    .hbill { margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--card-bg); }
+    .hbill[open] { border-color: var(--text-muted); }
+    .hbill summary {
+      display: grid;
+      grid-template-columns: 70px 70px minmax(150px, 1fr) 90px minmax(120px, 1fr) 110px 110px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 14px;
+      cursor: pointer;
+      list-style: none;
+      font-size: 0.88rem;
+    }
+    .hbill summary::-webkit-details-marker { display: none; }
+    .hbill summary .amt { text-align: right; font-weight: 700; color: var(--accent-gold); }
+    .hbill-body { padding: 4px 14px 14px; border-top: 1px solid var(--border-color); }
+    .hround { margin-top: 10px; }
+    .hround-head { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px; }
+    .hround-head b { color: var(--text-light); font-weight: 600; }
+    .hit { background: rgba(243,186,47,0.15); color: var(--accent-gold); border-radius: 4px; padding: 0 4px; }
+    .hbill-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; font-size: 0.85rem; color: var(--text-muted); }
+    @media (max-width: 1000px) {
+      .hbill summary { grid-template-columns: 60px 60px 1fr 100px; }
+      .hbill summary .hide-narrow { display: none; }
+    }
     .day-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
     .day-nav b { font-family: var(--font-display); min-width: 130px; text-align: center; }
 
@@ -260,6 +296,7 @@
     <nav class="tabs">
       <button class="tab active" data-view="floor" type="button">Маси<span class="count" id="newCount" hidden></span></button>
       <button class="tab" data-view="report" type="button">Дневен извештај</button>
+      <button class="tab" data-view="history" type="button">Историја</button>
       <button class="tab" data-view="log" type="button">Дневник</button>
     </nav>
     <div class="spacer"></div>
@@ -299,6 +336,31 @@
       <div class="table-wrap"><table id="billsTable"></table></div>
       <h2>По келнер</h2>
       <div class="table-wrap"><table id="waiterTable"></table></div>
+    </section>
+
+    <!-- HISTORY: every bill, filtered by table, waiter and dates -->
+    <section id="view-history" hidden>
+      <div class="filters">
+        <label>Од<input type="date" id="hFrom"></label>
+        <label>До<input type="date" id="hTo"></label>
+        <label>Маса<select id="hTable"><option value="">Сите маси</option></select></label>
+        <label>Келнер<select id="hWaiter"><option value="">Сите келнери</option></select></label>
+        <label>Сметки<select id="hStatus">
+          <option value="">Сите</option>
+          <option value="closed">Платени</option>
+          <option value="open">Отворени</option>
+        </select></label>
+        <div class="quick">
+          <button class="btn small" type="button" data-days="0">Денес</button>
+          <button class="btn small" type="button" data-days="6">7 дена</button>
+          <button class="btn small" type="button" data-days="29">30 дена</button>
+        </div>
+        <span class="spacer"></span>
+        <button class="btn small" type="button" id="hCsv">Извези за Excel</button>
+      </div>
+      <div class="stats" id="hStats"></div>
+      <p class="muted" id="hHint"></p>
+      <div id="hList"></div>
     </section>
 
     <!-- AUDIT LOG -->
@@ -741,6 +803,213 @@
     $('dayPrev').addEventListener('click', () => { reportDay = new Date(reportDay.getTime() - 86400000); render(); });
     $('dayNext').addEventListener('click', () => { reportDay = new Date(reportDay.getTime() + 86400000); render(); });
 
+    // ---- HISTORY ----
+    /* Every bill, newest first. A waiter filter keeps the bills that waiter
+       touched in any way — entered an order, accepted or served one, or took
+       the money — and the summary shows what they did. */
+    const hFrom = $('hFrom'), hTo = $('hTo'), hTable = $('hTable'), hWaiter = $('hWaiter'), hStatus = $('hStatus');
+    function isoDay(d) {
+      const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+      return z.toISOString().slice(0, 10);
+    }
+    function setRange(days) {
+      const today = new Date();
+      hTo.value = isoDay(today);
+      hFrom.value = isoDay(new Date(today.getTime() - days * 86400000));
+    }
+    setRange(6);
+    for (let t = 1; t <= Ledger.TABLES; t++) hTable.appendChild(new Option('Маса ' + t, t));
+
+    function rolesOf(bill, name) {
+      const roles = [];
+      if (bill.rounds.some(r => r.by === 'waiter' && r.waiter === name)) roles.push('внесе');
+      if (bill.rounds.some(r => r.log.some(l => l.by === name))) roles.push('послужи');
+      if (bill.closedBy === name) roles.push('наплати');
+      return roles;
+    }
+    function historyBills(st) {
+      const from = hFrom.value ? new Date(hFrom.value + 'T00:00:00') : null;
+      const to = hTo.value ? new Date(hTo.value + 'T23:59:59.999') : null;
+      const table = Number(hTable.value) || null;
+      const name = hWaiter.value;
+      return Object.values(st.bills).filter(function (b) {
+        const opened = new Date(b.openedAt);
+        if (from && opened < from) return false;
+        if (to && opened > to) return false;
+        if (table && b.table !== table) return false;
+        if (hStatus.value && b.status !== hStatus.value) return false;
+        if (name && !rolesOf(b, name).length) return false;
+        return true;
+      }).sort((a, b) => new Date(b.openedAt) - new Date(a.openedAt));
+    }
+
+    function fillWaiterFilter(st) {
+      const names = new Set(Array.from(waiterSel.options).map(o => o.value).filter(Boolean));
+      Object.values(st.rounds).forEach(function (r) {
+        if (r.waiter) names.add(r.waiter);
+        r.log.forEach(l => names.add(l.by));
+      });
+      Object.values(st.bills).forEach(b => { if (b.closedBy) names.add(b.closedBy); });
+      const keep = hWaiter.value;
+      hWaiter.length = 1;
+      Array.from(names).sort().forEach(n => hWaiter.appendChild(new Option(n, n)));
+      hWaiter.value = keep;
+    }
+
+    function durationOf(b) {
+      if (!b.closedAt) return '';
+      const m = Math.round((new Date(b.closedAt) - new Date(b.openedAt)) / 60000);
+      return m < 60 ? m + ' мин' : Math.floor(m / 60) + 'ч ' + (m % 60) + 'м';
+    }
+
+    function renderHistory(st) {
+      fillWaiterFilter(st);
+      const bills = historyBills(st);
+      const name = hWaiter.value;
+      const table = Number(hTable.value) || null;
+      const paid = bills.filter(b => b.status === 'closed');
+      const sum = list => list.reduce((s, b) => s + b.total, 0);
+
+      let stats;
+      if (name) {
+        // What this one person did inside the chosen period.
+        let entered = 0, enteredSum = 0, handled = 0, cash = 0, card = 0, closedN = 0;
+        bills.forEach(function (b) {
+          b.rounds.forEach(function (r) {
+            if (r.by === 'waiter' && r.waiter === name) { entered++; enteredSum += r.total; }
+            handled += r.log.filter(l => l.by === name).length;
+          });
+          if (b.closedBy === name) { closedN++; if (b.method === 'cash') cash += b.total; else card += b.total; }
+        });
+        stats = [
+          ['Сметки каде учествувал', bills.length],
+          ['Внесени нарачки', entered + ' · ' + den(enteredSum)],
+          ['Прифатени / сервирани', handled],
+          ['Наплатени сметки', closedN],
+          ['Наплатил готовина', den(cash)],
+          ['Наплатил картичка', den(card)]
+        ];
+      } else {
+        const fromGuests = bills.reduce((n, b) => n + b.rounds.filter(r => r.by === 'guest').length, 0);
+        const allRounds = bills.reduce((n, b) => n + b.rounds.length, 0);
+        stats = [
+          ['Сметки', bills.length + (bills.length > paid.length ? ' (' + (bills.length - paid.length) + ' отворени)' : '')],
+          ['Наплатено', den(sum(paid))],
+          ['Просечна сметка', paid.length ? den(Math.round(sum(paid) / paid.length)) : '—'],
+          ['Нарачки од гости (QR)', allRounds ? Math.round(100 * fromGuests / allRounds) + '%' : '—']
+        ];
+        if (table) {
+          const mins = paid.map(b => (new Date(b.closedAt) - new Date(b.openedAt)) / 60000);
+          stats.push(['Просечно седење', mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) + ' мин' : '—']);
+        }
+      }
+      const box = $('hStats');
+      box.innerHTML = '';
+      stats.forEach(function (s) {
+        const x = el('div', 'stat');
+        x.appendChild(el('div', 'stat-label', s[0]));
+        x.appendChild(el('div', 'stat-value', s[1]));
+        box.appendChild(x);
+      });
+
+      $('hHint').textContent = bills.length
+        ? 'Кликнете на сметка за да ги видите сите нарачки, кој ги внесе, кој ги послужи и кој наплати.'
+        : 'Нема сметки за избраните филтри.';
+
+      const list = $('hList');
+      // A new order elsewhere re-renders the list; keep what the owner opened.
+      const wasOpen = new Set(Array.from(list.querySelectorAll('details[open]')).map(x => x.dataset.bill));
+      list.innerHTML = '';
+      bills.forEach(function (b) {
+        const d = el('details', 'hbill');
+        d.dataset.bill = b.id;
+        const sm = el('summary');
+        sm.appendChild(el('span', 'mono', b.number ? '#' + billNo(b.number) : 'отворена'));
+        sm.appendChild(el('span', null, 'Маса ' + b.table));
+        sm.appendChild(el('span', null, dateOf(b.openedAt) + ' ' + timeOf(b.openedAt) + (b.closedAt ? '–' + timeOf(b.closedAt) : '')));
+        sm.appendChild(el('span', 'hide-narrow muted', b.rounds.length + ' нар. ' + durationOf(b)));
+        const who = el('span', 'hide-narrow');
+        if (name) who.appendChild(el('span', 'hit', name + ': ' + rolesOf(b, name).join(', ')));
+        else who.textContent = b.closedBy ? 'наплати ' + b.closedBy : '';
+        sm.appendChild(who);
+        sm.appendChild(el('span', 'hide-narrow', b.status === 'closed' ? METHOD_LABEL[b.method] : 'отворена'));
+        sm.appendChild(el('span', 'amt', den(b.total)));
+        d.appendChild(sm);
+
+        // The body is built only when opened: a month of bills stays light.
+        d.addEventListener('toggle', function () {
+          if (!d.open || d.dataset.built) return;
+          d.dataset.built = '1';
+          const body = el('div', 'hbill-body');
+          b.rounds.forEach(function (r, i) {
+            const rb = el('div', 'hround');
+            const head = el('div', 'hround-head');
+            head.appendChild(el('b', null, 'Нарачка ' + (i + 1) + ' · ' + timeOf(r.at)));
+            const enteredBy = r.by === 'guest' ? 'гостин (QR)' : 'внесе ' + r.waiter;
+            const steps = r.log.map(l => (l.status === 'accepted' ? 'прифати ' : 'сервира ') + l.by + ' ' + timeOf(l.at));
+            head.appendChild(document.createTextNode(' · ' + [enteredBy].concat(steps).join(' · ')));
+            rb.appendChild(head);
+            r.items.forEach(function (it) {
+              const line = el('div', 'line');
+              const n = el('span', null, it.name);
+              n.appendChild(el('span', 'qty', ' ×' + it.qty));
+              line.appendChild(n);
+              line.appendChild(el('span', 'amt', den(it.price * it.qty)));
+              rb.appendChild(line);
+            });
+            body.appendChild(rb);
+          });
+          const foot = el('div', 'hbill-foot');
+          foot.appendChild(el('span', null, b.status === 'closed'
+            ? 'Наплати ' + b.closedBy + ' · ' + METHOD_LABEL[b.method] + ' · ' + dateOf(b.closedAt) + ' ' + timeOf(b.closedAt) +
+              (b.requestedAt ? ' · гостинот побара сметка во ' + timeOf(b.requestedAt) : '')
+            : 'Сметката е сè уште отворена.'));
+          if (b.status === 'closed') {
+            const rc = el('button', 'btn small', 'Сметка / печати');
+            rc.type = 'button';
+            rc.addEventListener('click', () => showReceipt(b.id));
+            foot.appendChild(rc);
+          }
+          body.appendChild(foot);
+          d.appendChild(body);
+        });
+        list.appendChild(d);
+        if (wasOpen.has(String(b.id))) d.open = true;
+      });
+    }
+
+    [hFrom, hTo, hTable, hWaiter, hStatus].forEach(x => x.addEventListener('change', render));
+    document.querySelectorAll('.quick .btn').forEach(function (b) {
+      b.addEventListener('click', function () { setRange(Number(b.dataset.days)); render(); });
+    });
+
+    // One row per dish, so the owner can sum by anything in Excel.
+    $('hCsv').addEventListener('click', function () {
+      const bills = historyBills(Ledger.state());
+      const rows = [['Сметка', 'Маса', 'Отворена', 'Затворена', 'Нарачка', 'Време нарачка', 'Внесе', 'Прифати', 'Сервира',
+                     'Ставка', 'Количина', 'Цена', 'Износ', 'Наплати', 'Начин']];
+      const stamp = iso => iso ? dateOf(iso) + ' ' + timeOf(iso) : '';
+      bills.forEach(function (b) {
+        b.rounds.forEach(function (r, i) {
+          const acc = r.log.find(l => l.status === 'accepted');
+          const srv = r.log.find(l => l.status === 'served');
+          r.items.forEach(function (it) {
+            rows.push([b.number ? billNo(b.number) : 'отворена', b.table, stamp(b.openedAt), stamp(b.closedAt), i + 1, stamp(r.at),
+              r.by === 'guest' ? 'гостин (QR)' : r.waiter, acc ? acc.by : '', srv ? srv.by : '',
+              it.name, it.qty, it.price, it.price * it.qty, b.closedBy || '', b.method ? METHOD_LABEL[b.method] : '']);
+          });
+        });
+      });
+      const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+      // The BOM makes Excel read Cyrillic correctly; ';' is the separator it expects here.
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kafana-istorija-' + hFrom.value + '_' + hTo.value + '.csv';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+
     // ---- AUDIT LOG ----
     function describe(ev, st) {
       const d = ev.data;
@@ -800,13 +1069,14 @@
       renderPanel(st);
       if (view === 'report') renderReport(st);
       if (view === 'log') renderLog(st);
+      if (view === 'history') renderHistory(st);
     }
 
     document.querySelectorAll('.tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
         view = tab.dataset.view;
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
-        ['floor', 'report', 'log'].forEach(v => { $('view-' + v).hidden = v !== view; });
+        ['floor', 'report', 'history', 'log'].forEach(v => { $('view-' + v).hidden = v !== view; });
         render();
       });
     });

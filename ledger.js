@@ -85,7 +85,8 @@
           seq: ev.seq, billId: billId, table: d.table, at: ev.at,
           items: d.items.map(function (it) { return { name: it.name, qty: it.qty, price: Number(it.price), category: it.category }; }),
           total: Number(d.total), by: d.by, waiter: d.waiter || null,
-          status: 'new', statusAt: ev.at, statusBy: null
+          status: 'new', statusAt: ev.at, statusBy: null,
+          log: []   // every accept/serve, with who and when
         };
         rounds[ev.seq] = round;
         bills[billId].rounds.push(round);
@@ -93,10 +94,13 @@
         bills[billId].lastAt = ev.at;
       } else if (ev.type === 'status') {
         const r = rounds[d.round];
-        if (r) { r.status = d.status; r.statusAt = ev.at; r.statusBy = d.waiter; }
+        if (r) {
+          r.status = d.status; r.statusAt = ev.at; r.statusBy = d.waiter;
+          r.log.push({ status: d.status, at: ev.at, by: d.waiter });
+        }
       } else if (ev.type === 'bill_request') {
         const b = bills[d.bill];
-        if (b && b.status === 'open') b.requestedAt = ev.at;
+        if (b && b.status === 'open') b.requestedAt = b.requestedAt || ev.at;
       } else if (ev.type === 'close') {
         const b = bills[d.bill];
         if (b && b.status === 'open') {
