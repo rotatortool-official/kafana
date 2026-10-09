@@ -1150,6 +1150,9 @@
     .round-status.new { color: var(--accent-gold); }
     .round-status.accepted { color: #58a6ff; }
     .round-status.served { color: #3fb950; }
+    .round-status.rejected { color: #f85149; }
+    .round-block.rejected .summary-line { opacity: 0.5; text-decoration: line-through; }
+    .round-note { margin-top: 4px; font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
     .paid-stamp {
       margin: 4px auto 6px;
       padding: 8px 12px;
@@ -2358,6 +2361,20 @@
        ================================================================== */
     const TABLE_KEY = 'kafana.table';
     const BILL_KEY = 'kafana.lastBill';
+    const ROUND_KEY = 'kafana.lastRound';
+    const MOVED_KEY = 'kafana.movedSeen';
+    /* The phone remembers its table and its last order for one evening, so
+       closing the tab and scanning again still shows the guest their bill. */
+    const VISIT_MS = 12 * 3600 * 1000;
+    function readNum(key) {
+      try {
+        const v = JSON.parse(localStorage.getItem(key));
+        return v && Date.now() - v.t < VISIT_MS ? Number(v.n) || null : null;
+      } catch (e) { return null; }
+    }
+    function writeNum(key, n) {
+      try { localStorage.setItem(key, JSON.stringify({ n: n, t: Date.now() })); } catch (e) { /* ignore */ }
+    }
 
     // The QR code on each table carries its number: ...index.html?table=5
     // (the short ...index.html#5 works too, for a link typed by hand).
@@ -2369,7 +2386,7 @@
     const urlTable = tableFromUrl();
     let table = urlTable;
     if (!table) {
-      try { table = Number(sessionStorage.getItem(TABLE_KEY)) || null; } catch (e) { /* ignore */ }
+      table = readNum(TABLE_KEY);
     }
     let pickedTable = table;
 
@@ -2497,10 +2514,9 @@
         renderSend();
       }
       table = pickedTable;
-      try {
-        sessionStorage.setItem(TABLE_KEY, String(table));
-        sessionStorage.setItem(BILL_KEY, String(ev.data.bill));
-      } catch (e) { /* ignore */ }
+      writeNum(TABLE_KEY, table);
+      writeNum(BILL_KEY, ev.data.bill);
+      writeNum(ROUND_KEY, ev.seq);
       cart = {};
       renderCart();
       closeOverlay(sendOverlay);
@@ -2512,16 +2528,39 @@
        it last ordered on, so a guest still sees "paid" after the waiter
        closes it. */
     function currentBill() {
-      if (!table) return null;
       const st = Ledger.state();
+      // Follow this phone's own last order first: if the waiter moved it to
+      // the table the guest really sits at, the phone goes with it.
+      const r = st.rounds[readNum(ROUND_KEY)];
+      const mine = r && st.bills[r.billId];
+      if (mine && mine.status === 'open' && !mine.void) return mine;
+      if (!table) return null;
       const openId = st.openByTable[table];
       if (openId) return st.bills[openId];
-      let last = null;
-      try { last = Number(sessionStorage.getItem(BILL_KEY)) || null; } catch (e) { /* ignore */ }
-      return last && st.bills[last] ? st.bills[last] : null;
+      // Nothing open here: show this phone's last bill (paid or rejected)
+      // only if it belongs to the table it is at now.
+      if (mine && r.table === table) return mine;
+      const last = readNum(BILL_KEY);
+      return last && st.bills[last] && st.bills[last].table === table ? st.bills[last] : null;
     }
 
-    const STATUS_LABEL = { new: 'Испратена', accepted: 'Примена', served: 'Сервирана' };
+    /* The waiter's correction wins over the code that was scanned: later
+       orders from this phone go to the table it was moved to. */
+    function followMove() {
+      const st = Ledger.state();
+      const r = st.rounds[readNum(ROUND_KEY)];
+      if (!r || !r.movedFrom || r.table === table) return;
+      const b = st.bills[r.billId];
+      if (!b || b.status !== 'open') return;   // an old visit does not pull the phone back
+      table = r.table;
+      writeNum(TABLE_KEY, table);
+      if (readNum(MOVED_KEY) !== r.seq) {
+        writeNum(MOVED_KEY, r.seq);
+        toast('Келнерот ја префрли вашата нарачка на маса ' + table);
+      }
+    }
+
+    const STATUS_LABEL = { new: 'Чека потврда', accepted: 'Потврдена', served: 'Сервирана' };
 
     function renderBill() {
       const chip = document.getElementById('cartTable');
@@ -2535,6 +2574,7 @@
         const n = bill.rounds.length;
         document.getElementById('billMiniText').textContent = bill.status === 'closed'
           ? 'Сметката е платена'
+          : bill.void ? 'Нарачката е одбиена'
           : 'Испратено: ' + n + (n === 1 ? ' нарачка' : ' нарачки');
         document.getElementById('billMiniTotal').textContent = formatDen(bill.total);
       }
@@ -2552,18 +2592,27 @@
       } else {
         bill.rounds.forEach(function (r, idx) {
           const block = document.createElement('div');
-          block.className = 'round-block';
+          block.className = 'round-block' + (r.rejected ? ' rejected' : '');
           const head = document.createElement('div');
           head.className = 'round-head';
           const left = document.createElement('span');
           left.textContent = '🔒 Нарачка ' + (idx + 1) + ' · ' + timeOf(r.at) + (r.by === 'waiter' ? ' · келнер' : '');
           const status = document.createElement('span');
-          status.className = 'round-status ' + r.status;
-          status.textContent = STATUS_LABEL[r.status];
+          status.className = 'round-status ' + (r.rejected ? 'rejected' : r.status);
+          status.textContent = r.rejected ? 'Одбиена' : STATUS_LABEL[r.status];
           head.appendChild(left);
           head.appendChild(status);
           block.appendChild(head);
           r.items.forEach(it => block.appendChild(summaryLine(it.name, it.qty, it.price * it.qty)));
+          const why = r.rejected
+            ? 'Келнерот ја одби: ' + r.rejected.reason + '. Не е на сметката.'
+            : r.movedFrom ? 'Префрлена од маса ' + r.movedFrom.table + ' на маса ' + r.table + '.' : '';
+          if (why) {
+            const note = document.createElement('div');
+            note.className = 'round-note';
+            note.textContent = why;
+            block.appendChild(note);
+          }
           waiterLines.appendChild(block);
         });
         if (bill.status === 'closed') {
@@ -2572,7 +2621,7 @@
           reqBtn.hidden = true;
         } else {
           stamp.hidden = true;
-          reqBtn.hidden = false;
+          reqBtn.hidden = bill.void;
           reqBtn.disabled = !!bill.requestedAt;
           reqBtn.textContent = bill.requestedAt
             ? 'Келнерот е повикан · ' + timeOf(bill.requestedAt)
@@ -2610,6 +2659,7 @@
     // The staff screen accepts, serves and closes; the guest sees it live.
     let knownStatus = null;
     Ledger.onChange(function () {
+      followMove();
       const bill = currentBill();
       if (bill && knownStatus && knownStatus.id === bill.id && knownStatus.status !== bill.status && bill.status === 'closed') {
         toast('Сметката е платена. Ви благодариме!');

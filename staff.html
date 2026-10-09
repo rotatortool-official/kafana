@@ -154,6 +154,17 @@
     .pill.new { color: var(--accent-gold); }
     .pill.accepted { color: var(--blue); }
     .pill.served { color: var(--green); }
+    .pill.rejected { color: var(--red); }
+    .round.rejected { opacity: 0.6; }
+    .round.rejected .line { text-decoration: line-through; }
+    .round-note { margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
+    .round-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .move-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px; }
+    .move-grid .btn { padding: 12px 0; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
+    .move-grid .btn.current { border-style: dashed; }
+    .reason-list { display: grid; gap: 8px; margin: 14px 0 10px; }
+    .reason-list .btn { text-align: left; }
+    .reason-list .btn.active { border-color: var(--red); color: var(--red); }
     .btn {
       padding: 9px 14px;
       border-radius: 8px;
@@ -219,6 +230,7 @@
     .hround { margin-top: 10px; }
     .hround-head { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px; }
     .hround-head b { color: var(--text-light); font-weight: 600; }
+    .hround.rejected .line { opacity: 0.5; text-decoration: line-through; }
     .hit { background: rgba(243,186,47,0.15); color: var(--accent-gold); border-radius: 4px; padding: 0 4px; }
     .hbill-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; font-size: 0.85rem; color: var(--text-muted); }
     @media (max-width: 1000px) {
@@ -349,6 +361,7 @@
           <option value="">Сите</option>
           <option value="closed">Платени</option>
           <option value="open">Отворени</option>
+          <option value="void">Одбиени</option>
         </select></label>
         <div class="quick">
           <button class="btn small" type="button" data-days="0">Денес</button>
@@ -406,8 +419,8 @@
       return e;
     }
     function billNo(n) { return String(n).padStart(4, '0'); }
-    const STATUS_LABEL = { new: 'Нова', accepted: 'Примена', served: 'Сервирана' };
-    const NEXT_STATUS = { new: ['accepted', 'Прифати'], accepted: ['served', 'Сервирано'] };
+    const STATUS_LABEL = { new: 'Чека потврда', accepted: 'Потврдена', served: 'Сервирана' };
+    const NEXT_STATUS = { new: ['accepted', 'Потврди'], accepted: ['served', 'Сервирано'] };
     const METHOD_LABEL = { cash: 'Готовина', card: 'Картичка' };
 
     const waiterSel = $('waiter');
@@ -453,10 +466,10 @@
           card.classList.add('free');
           card.appendChild(el('div', 'table-state', 'Слободна'));
         } else {
-          const fresh = bill.rounds.filter(r => r.status === 'new').length;
+          const fresh = bill.rounds.filter(r => r.status === 'new' && !r.rejected).length;
           newRounds += fresh;
           let state = 'Отворена';
-          if (fresh) { card.classList.add('has-new'); state = fresh === 1 ? 'Нова нарачка' : fresh + ' нови нарачки'; }
+          if (fresh) { card.classList.add('has-new'); state = fresh === 1 ? 'Да се потврди' : fresh + ' за потврда'; }
           else if (bill.requestedAt) { card.classList.add('wants-bill'); state = 'Бара сметка'; }
           card.appendChild(el('div', 'table-state', state));
           card.appendChild(el('div', 'table-total', den(bill.total)));
@@ -494,7 +507,7 @@
         (bill.requestedAt ? ' · бара сметка од ' + timeOf(bill.requestedAt) : '')));
 
       bill.rounds.forEach(function (r, i) {
-        const box = el('div', 'round ' + r.status);
+        const box = el('div', 'round ' + (r.rejected ? 'rejected' : r.status));
         const head = el('div', 'round-head');
         const left = el('span');
         left.appendChild(el('b', null, '🔒 Нарачка ' + (i + 1)));
@@ -510,10 +523,39 @@
           line.appendChild(el('span', 'amt', den(it.price * it.qty)));
           box.appendChild(line);
         });
+        if (r.movedFrom) {
+          box.appendChild(el('div', 'round-note', '↪ Префрлена од маса ' + r.movedFrom.table + ' · ' + r.movedFrom.by + ' ' + timeOf(r.movedFrom.at)));
+        }
         const foot = el('div', 'round-foot');
+        if (r.rejected) {
+          foot.appendChild(el('span', 'pill rejected', 'Одбиена · ' + r.rejected.by + ' ' + timeOf(r.rejected.at)));
+          foot.appendChild(el('span', 'round-note', r.rejected.reason));
+          box.appendChild(foot);
+          p.appendChild(box);
+          return;
+        }
         foot.appendChild(el('span', 'pill ' + r.status, STATUS_LABEL[r.status] + (r.statusBy ? ' · ' + r.statusBy + ' ' + timeOf(r.statusAt) : '')));
         const next = NEXT_STATUS[r.status];
-        if (next) {
+        if (r.status === 'new' && r.by === 'guest') {
+          // The waiter is at the table: they confirm where the guest really sits.
+          const btns = el('span', 'round-btns');
+          const reject = el('button', 'btn small', 'Одбиј');
+          reject.type = 'button';
+          reject.addEventListener('click', () => openReject(r));
+          const move = el('button', 'btn small', 'Друга маса');
+          move.type = 'button';
+          move.addEventListener('click', () => openMove(r));
+          const ok = el('button', 'btn small gold', 'Потврди · маса ' + r.table);
+          ok.type = 'button';
+          ok.addEventListener('click', function () {
+            const w = waiter(); if (!w) return;
+            act(() => Ledger.staffAccept(r.seq, r.table, w));
+          });
+          btns.appendChild(reject);
+          btns.appendChild(move);
+          btns.appendChild(ok);
+          foot.appendChild(btns);
+        } else if (next) {
           const b = el('button', 'btn small ' + (r.status === 'new' ? 'gold' : ''), next[1]);
           b.type = 'button';
           b.addEventListener('click', function () {
@@ -555,6 +597,77 @@
     function closeModal() { $('modal').hidden = true; }
     $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ---- CONFIRM AT ANOTHER TABLE ----
+    function openMove(r) {
+      if (!waiter()) return;
+      openModal(function (box) {
+        box.appendChild(el('div', 'modal-title', 'На која маса седи гостинот?'));
+        box.appendChild(el('div', 'panel-sub', 'Нарачката дојде од кодот на маса ' + r.table + '. Ставките и цените не се менуваат.'));
+        const grid = el('div', 'move-grid');
+        for (let t = 1; t <= Ledger.TABLES; t++) {
+          const b = el('button', 'btn' + (t === r.table ? ' current' : ''), t);
+          b.type = 'button';
+          b.disabled = t === r.table;
+          b.addEventListener('click', function () {
+            const w = waiter(); if (!w) return;
+            act(() => Ledger.staffAccept(r.seq, t, w)).then(ev => { if (ev) { closeModal(); selected = t; render(); } });
+          });
+          grid.appendChild(b);
+        }
+        box.appendChild(grid);
+        box.appendChild(el('p', 'rule', 'Нарачката се префрла и се потврдува во исто време. Префрлањето се запишува со вашето име.'));
+        const actions = el('div', 'modal-actions');
+        const cancel = el('button', 'btn', 'Откажи');
+        cancel.type = 'button';
+        cancel.addEventListener('click', closeModal);
+        actions.appendChild(cancel);
+        box.appendChild(actions);
+      });
+    }
+
+    // ---- REJECT AN UNCONFIRMED ORDER ----
+    const REJECT_REASONS = ['Никој на масата не ја нарачал', 'Двојна нарачка — веќе е внесена', 'Гостинот се премисли пред потврда', 'Ставката ја нема денес'];
+    function openReject(r) {
+      if (!waiter()) return;
+      let reason = '';
+      openModal(function (box) {
+        box.appendChild(el('div', 'modal-title', 'Одбиј нарачка · маса ' + r.table));
+        box.appendChild(el('div', 'panel-sub', r.items.map(it => it.qty + '× ' + it.name).join(', ') + ' · ' + den(r.total)));
+        const list = el('div', 'reason-list');
+        const other = el('input', 'search');
+        other.placeholder = 'Друга причина…';
+        const confirmBtn = el('button', 'btn', 'Одбиј');
+        confirmBtn.type = 'button';
+        confirmBtn.disabled = true;
+        function pick(text, btn) {
+          reason = text;
+          list.querySelectorAll('.btn').forEach(x => x.classList.toggle('active', x === btn));
+          confirmBtn.disabled = !reason.trim();
+        }
+        REJECT_REASONS.forEach(function (text) {
+          const b = el('button', 'btn', text);
+          b.type = 'button';
+          b.addEventListener('click', () => { other.value = ''; pick(text, b); });
+          list.appendChild(b);
+        });
+        other.addEventListener('input', () => pick(other.value, null));
+        box.appendChild(list);
+        box.appendChild(other);
+        box.appendChild(el('p', 'warn', 'Одбиената нарачка не се брише: останува во историјата со вашето име и причината, и газдата ги гледа сите одбивања по келнер.'));
+        const actions = el('div', 'modal-actions');
+        const cancel = el('button', 'btn', 'Откажи');
+        cancel.type = 'button';
+        cancel.addEventListener('click', closeModal);
+        confirmBtn.addEventListener('click', function () {
+          const w = waiter(); if (!w || !reason.trim()) return;
+          act(() => Ledger.staffReject(r.seq, reason.trim(), w)).then(ev => { if (ev) closeModal(); });
+        });
+        actions.appendChild(cancel);
+        actions.appendChild(confirmBtn);
+        box.appendChild(actions);
+      });
+    }
 
     // ---- CLOSE THE BILL ----
     function openClose(billId) {
@@ -782,21 +895,27 @@
 
       // What each person entered and what each person took in.
       const per = {};
-      const row = name => per[name] || (per[name] = { entered: 0, enteredSum: 0, closed: 0, cash: 0, card: 0 });
+      const row = name => per[name] || (per[name] = { entered: 0, enteredSum: 0, moved: 0, rejected: 0, rejectedSum: 0, closed: 0, cash: 0, card: 0 });
       Object.values(st.rounds).forEach(function (r) {
         if (r.by === 'waiter' && sameDay(r.at, reportDay)) { row(r.waiter).entered++; row(r.waiter).enteredSum += r.total; }
+        r.log.forEach(function (l) {
+          if (!sameDay(l.at, reportDay)) return;
+          if (l.status === 'moved') row(l.by).moved++;
+          if (l.status === 'rejected') { row(l.by).rejected++; row(l.by).rejectedSum += r.total; }
+        });
       });
       closed.forEach(function (b) { const x = row(b.closedBy); x.closed++; x[b.method] += b.total; });
       const wt = $('waiterTable');
-      wt.innerHTML = '<tr><th>Келнер</th><th class="num">Внесени нарачки</th><th class="num">Вредност внесено</th><th class="num">Затворени сметки</th><th class="num">Готовина</th><th class="num">Картичка</th></tr>';
+      wt.innerHTML = '<tr><th>Келнер</th><th class="num">Внесени нарачки</th><th class="num">Вредност внесено</th><th class="num">Префрлени</th><th class="num">Одбиени</th><th class="num">Затворени сметки</th><th class="num">Готовина</th><th class="num">Картичка</th></tr>';
       const names = Object.keys(per);
       if (!names.length) {
-        const tr = el('tr'); const td = el('td', 'muted', 'Нема активност за овој ден.'); td.colSpan = 6; tr.appendChild(td); wt.appendChild(tr);
+        const tr = el('tr'); const td = el('td', 'muted', 'Нема активност за овој ден.'); td.colSpan = 8; tr.appendChild(td); wt.appendChild(tr);
       }
       names.forEach(function (n) {
         const x = per[n];
         const tr = el('tr');
-        [n, x.entered, den(x.enteredSum), x.closed, den(x.cash), den(x.card)].forEach((v, i) => tr.appendChild(el('td', i ? 'num' : null, v)));
+        [n, x.entered, den(x.enteredSum), x.moved, x.rejected ? x.rejected + ' · ' + den(x.rejectedSum) : 0, x.closed, den(x.cash), den(x.card)]
+          .forEach((v, i) => tr.appendChild(el('td', i ? 'num' : null, v)));
         wt.appendChild(tr);
       });
     }
@@ -837,7 +956,7 @@
         if (from && opened < from) return false;
         if (to && opened > to) return false;
         if (table && b.table !== table) return false;
-        if (hStatus.value && b.status !== hStatus.value) return false;
+        if (hStatus.value && (b.void ? 'void' : b.status) !== hStatus.value) return false;
         if (name && !rolesOf(b, name).length) return false;
         return true;
       }).sort((a, b) => new Date(b.openedAt) - new Date(a.openedAt));
@@ -877,14 +996,24 @@
         bills.forEach(function (b) {
           b.rounds.forEach(function (r) {
             if (r.by === 'waiter' && r.waiter === name) { entered++; enteredSum += r.total; }
-            handled += r.log.filter(l => l.by === name).length;
+            handled += r.log.filter(l => l.by === name && (l.status === 'accepted' || l.status === 'served')).length;
           });
           if (b.closedBy === name) { closedN++; if (b.method === 'cash') cash += b.total; else card += b.total; }
         });
+        let rejectedN = 0, rejectedSum = 0, movedN = 0;
+        bills.forEach(b => b.rounds.forEach(function (r) {
+          r.log.forEach(function (l) {
+            if (l.by !== name) return;
+            if (l.status === 'rejected') { rejectedN++; rejectedSum += r.total; }
+            if (l.status === 'moved') movedN++;
+          });
+        }));
         stats = [
           ['Сметки каде учествувал', bills.length],
+          ['Одбиени нарачки', rejectedN ? rejectedN + ' · ' + den(rejectedSum) : 0],
+          ['Префрлени на друга маса', movedN],
           ['Внесени нарачки', entered + ' · ' + den(enteredSum)],
-          ['Прифатени / сервирани', handled],
+          ['Потврдени / сервирани', handled],
           ['Наплатени сметки', closedN],
           ['Наплатил готовина', den(cash)],
           ['Наплатил картичка', den(card)]
@@ -932,7 +1061,7 @@
         if (name) who.appendChild(el('span', 'hit', name + ': ' + rolesOf(b, name).join(', ')));
         else who.textContent = b.closedBy ? 'наплати ' + b.closedBy : '';
         sm.appendChild(who);
-        sm.appendChild(el('span', 'hide-narrow', b.status === 'closed' ? METHOD_LABEL[b.method] : 'отворена'));
+        sm.appendChild(el('span', 'hide-narrow', b.status === 'closed' ? METHOD_LABEL[b.method] : b.void ? 'одбиена' : 'отворена'));
         sm.appendChild(el('span', 'amt', den(b.total)));
         d.appendChild(sm);
 
@@ -946,7 +1075,11 @@
             const head = el('div', 'hround-head');
             head.appendChild(el('b', null, 'Нарачка ' + (i + 1) + ' · ' + timeOf(r.at)));
             const enteredBy = r.by === 'guest' ? 'гостин (QR)' : 'внесе ' + r.waiter;
-            const steps = r.log.map(l => (l.status === 'accepted' ? 'прифати ' : 'сервира ') + l.by + ' ' + timeOf(l.at));
+            const STEP = { accepted: 'потврди', served: 'сервира', moved: 'префрли', rejected: 'одби' };
+            const steps = r.log.map(l => STEP[l.status] + ' ' + l.by + ' ' + timeOf(l.at) +
+              (l.status === 'moved' ? ' (маса ' + l.from + ' → ' + l.to + ')' : '') +
+              (l.status === 'rejected' ? ' — „' + l.reason + '“' : ''));
+            if (r.rejected) rb.classList.add('rejected');
             head.appendChild(document.createTextNode(' · ' + [enteredBy].concat(steps).join(' · ')));
             rb.appendChild(head);
             r.items.forEach(function (it) {
@@ -986,8 +1119,8 @@
     // One row per dish, so the owner can sum by anything in Excel.
     $('hCsv').addEventListener('click', function () {
       const bills = historyBills(Ledger.state());
-      const rows = [['Сметка', 'Маса', 'Отворена', 'Затворена', 'Нарачка', 'Време нарачка', 'Внесе', 'Прифати', 'Сервира',
-                     'Ставка', 'Количина', 'Цена', 'Износ', 'Наплати', 'Начин']];
+      const rows = [['Сметка', 'Маса', 'Отворена', 'Затворена', 'Нарачка', 'Време нарачка', 'Внесе', 'Потврди', 'Сервира',
+                     'Ставка', 'Количина', 'Цена', 'Износ', 'Наплати', 'Начин', 'Префрлена од маса', 'Одбиена (причина)', 'Одби']];
       const stamp = iso => iso ? dateOf(iso) + ' ' + timeOf(iso) : '';
       bills.forEach(function (b) {
         b.rounds.forEach(function (r, i) {
@@ -996,7 +1129,8 @@
           r.items.forEach(function (it) {
             rows.push([b.number ? billNo(b.number) : 'отворена', b.table, stamp(b.openedAt), stamp(b.closedAt), i + 1, stamp(r.at),
               r.by === 'guest' ? 'гостин (QR)' : r.waiter, acc ? acc.by : '', srv ? srv.by : '',
-              it.name, it.qty, it.price, it.price * it.qty, b.closedBy || '', b.method ? METHOD_LABEL[b.method] : '']);
+              it.name, it.qty, it.price, r.rejected ? 0 : it.price * it.qty, b.closedBy || '', b.method ? METHOD_LABEL[b.method] : '',
+              r.movedFrom ? r.movedFrom.table : '', r.rejected ? r.rejected.reason : '', r.rejected ? r.rejected.by : '']);
           });
         });
       });
@@ -1029,6 +1163,8 @@
         const b = st.bills[d.bill];
         return 'Сметка бр. ' + billNo(d.number) + ' (маса ' + (b ? b.table : '?') + ') затворена · ' + METHOD_LABEL[d.method] + ' · ' + den(d.total) + ' · ' + d.waiter;
       }
+      if (ev.type === 'move') return 'Нарачка #' + d.round + ' префрлена од маса ' + d.from_table + ' на маса ' + d.to_table + ' · ' + d.waiter;
+      if (ev.type === 'reject') return 'Нарачка #' + d.round + ' (маса ' + d.table + ') одбиена: „' + d.reason + '“ · ' + d.waiter;
       if (ev.type === 'reset') return '— Тест ресет: масите почнуваат од нула · ' + d.waiter + ' —';
       return ev.type;
     }

@@ -68,35 +68,78 @@
   function replay(events) {
     let bills = {}, openByTable = {}, rounds = {}, billCount = 0;
 
+    function billFor(id, table, at) {
+      if (!bills[id]) {
+        bills[id] = {
+          id: id, table: table, openedAt: at, rounds: [],
+          total: 0, status: 'open', requestedAt: null, void: false
+        };
+      }
+      if (bills[id].status === 'open') openByTable[table] = id;
+      return bills[id];
+    }
+    // A bill whose every order was moved away or rejected frees its table.
+    function settle(b) {
+      if (b.status !== 'open') return;
+      if (!b.rounds.length) {
+        delete bills[b.id];
+      } else if (!b.rounds.some(r => !r.rejected)) {
+        b.void = true;
+      } else {
+        return;
+      }
+      if (openByTable[b.table] === b.id) delete openByTable[b.table];
+    }
+
     events.forEach(function (ev) {
       const d = ev.data;
       if (ev.type === 'reset') {
         bills = {}; openByTable = {}; rounds = {}; billCount = 0;
       } else if (ev.type === 'round') {
-        const billId = d.bill;
-        if (!bills[billId]) {
-          bills[billId] = {
-            id: billId, table: d.table, openedAt: ev.at, rounds: [],
-            total: 0, status: 'open', requestedAt: null
-          };
-          openByTable[d.table] = billId;
-        }
+        const bill = billFor(d.bill, d.table, ev.at);
         const round = {
-          seq: ev.seq, billId: billId, table: d.table, at: ev.at,
+          seq: ev.seq, billId: d.bill, table: d.table, at: ev.at,
           items: d.items.map(function (it) { return { name: it.name, qty: it.qty, price: Number(it.price), category: it.category }; }),
           total: Number(d.total), by: d.by, waiter: d.waiter || null,
           status: 'new', statusAt: ev.at, statusBy: null,
-          log: []   // every accept/serve, with who and when
+          rejected: null, movedFrom: null,
+          log: []   // every accept, move, reject and serve, with who and when
         };
         rounds[ev.seq] = round;
-        bills[billId].rounds.push(round);
-        bills[billId].total += round.total;
-        bills[billId].lastAt = ev.at;
+        bill.rounds.push(round);
+        bill.total += round.total;
+        bill.lastAt = ev.at;
       } else if (ev.type === 'status') {
         const r = rounds[d.round];
         if (r) {
           r.status = d.status; r.statusAt = ev.at; r.statusBy = d.waiter;
           r.log.push({ status: d.status, at: ev.at, by: d.waiter });
+        }
+      } else if (ev.type === 'move') {
+        const r = rounds[d.round];
+        if (r) {
+          const from = bills[r.billId];
+          if (from) {
+            from.rounds = from.rounds.filter(x => x !== r);
+            from.total -= r.total;
+          }
+          const to = billFor(d.to_bill, d.to_table, ev.at);
+          to.rounds.push(r);
+          to.rounds.sort((a, b) => a.seq - b.seq);
+          to.total += r.total;
+          r.billId = d.to_bill;
+          r.movedFrom = { table: d.from_table, at: ev.at, by: d.waiter };
+          r.table = d.to_table;
+          r.log.push({ status: 'moved', from: d.from_table, to: d.to_table, at: ev.at, by: d.waiter });
+          if (from) settle(from);
+        }
+      } else if (ev.type === 'reject') {
+        const r = rounds[d.round];
+        if (r && !r.rejected) {
+          r.rejected = { reason: d.reason, at: ev.at, by: d.waiter };
+          r.log.push({ status: 'rejected', reason: d.reason, at: ev.at, by: d.waiter });
+          const b = bills[r.billId];
+          if (b) { b.total -= r.total; settle(b); }
         }
       } else if (ev.type === 'bill_request') {
         const b = bills[d.bill];
@@ -140,6 +183,8 @@
 
     staffOrder: (table, list, waiter) => rpc('staff_order', { p_table: table, p_items: items(list), p_waiter: waiter }),
     staffStatus: (round, status, waiter) => rpc('staff_status', { p_round: round, p_status: status, p_waiter: waiter }),
+    staffAccept: (round, table, waiter) => rpc('staff_accept', { p_round: round, p_table: table, p_waiter: waiter }),
+    staffReject: (round, reason, waiter) => rpc('staff_reject', { p_round: round, p_reason: reason, p_waiter: waiter }),
     staffClose: (bill, method, waiter) => rpc('staff_close', { p_bill: bill, p_method: method, p_waiter: waiter }),
     resetTest: waiter => rpc('staff_reset_test', { p_waiter: waiter }).then(loadAll).then(notify),
 
