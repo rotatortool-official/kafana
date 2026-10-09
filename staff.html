@@ -155,6 +155,34 @@
     .pill.accepted { color: var(--blue); }
     .pill.served { color: var(--green); }
     .pill.rejected { color: var(--red); }
+    .take-all { width: 100%; margin-top: 14px; padding: 14px; font-size: 1rem; }
+    .round-fix { margin-top: 6px; text-align: right; font-size: 0.8rem; color: var(--text-muted); }
+    .link { border: none; background: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.8rem; padding: 2px; }
+    .link:hover { color: var(--text-light); }
+    .btn.pay { font-size: 1rem; }
+    .pay-methods.big { gap: 14px; margin-top: 16px; }
+    .pay-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 10px; border-width: 2px; }
+    .pay-btn:hover { border-color: var(--green); }
+    .pay-icon { font-size: 1.8rem; }
+    .pay-label { font-family: var(--font-label); font-size: 1.05rem; letter-spacing: 1px; }
+    .pay-amount { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; color: var(--accent-gold); }
+    .table-booking { margin-top: 6px; font-size: 0.72rem; color: var(--blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .table-card.reserved { border-color: var(--blue); border-style: solid; }
+    .table-card.reserved .table-state { color: var(--blue); }
+    .bk-list { margin-top: 18px; }
+    .bk-list h3 { font-family: var(--font-label); font-weight: 400; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .bk { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 6px; font-size: 0.88rem; background: var(--card-bg); }
+    .bk.cancelled, .bk.no_show { opacity: 0.5; }
+    .bk.cancelled .bk-main, .bk.no_show .bk-main { text-decoration: line-through; }
+    .bk-main b { font-family: var(--font-display); color: var(--blue); margin-right: 6px; }
+    .bk-meta { font-size: 0.78rem; color: var(--text-muted); }
+    .bk-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+    .form-grid label { display: flex; flex-direction: column; gap: 5px; font-size: 0.78rem; color: var(--text-muted); }
+    .form-grid input, .form-grid select { padding: 9px 10px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-light); font-size: 0.95rem; color-scheme: dark; }
+    .form-grid .wide { grid-column: 1 / -1; }
+    .bk-day { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+    @media (max-width: 1000px) { .bk-day { grid-template-columns: 1fr; } }
     .round.rejected { opacity: 0.6; }
     .round.rejected .line { text-decoration: line-through; }
     .round-note { margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
@@ -162,6 +190,7 @@
     .move-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px; }
     .move-grid .btn { padding: 12px 0; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
     .move-grid .btn.current { border-style: dashed; }
+    .move-grid .btn.booked { border-color: var(--blue); color: var(--blue); }
     .reason-list { display: grid; gap: 8px; margin: 14px 0 10px; }
     .reason-list .btn { text-align: left; }
     .reason-list .btn.active { border-color: var(--red); color: var(--red); }
@@ -308,6 +337,7 @@
     <nav class="tabs">
       <button class="tab active" data-view="floor" type="button">Маси<span class="count" id="newCount" hidden></span></button>
       <button class="tab" data-view="report" type="button">Дневен извештај</button>
+      <button class="tab" data-view="bookings" type="button">Резервации</button>
       <button class="tab" data-view="history" type="button">Историја</button>
       <button class="tab" data-view="log" type="button">Дневник</button>
     </nav>
@@ -348,6 +378,22 @@
       <div class="table-wrap"><table id="billsTable"></table></div>
       <h2>По келнер</h2>
       <div class="table-wrap"><table id="waiterTable"></table></div>
+    </section>
+
+    <!-- RESERVATIONS: staff only, guests never see them -->
+    <section id="view-bookings" hidden>
+      <div class="day-nav">
+        <button class="btn small" type="button" id="bkPrev">‹</button>
+        <input type="date" id="bkDay" class="search" style="width:auto">
+        <button class="btn small" type="button" id="bkNext">›</button>
+        <button class="btn small" type="button" id="bkToday">Денес</button>
+        <span class="spacer"></span>
+        <button class="btn gold" type="button" id="bkNew">+ Нова резервација</button>
+      </div>
+      <div class="bk-day">
+        <div id="bkList"></div>
+        <div class="panel" id="bkFree"></div>
+      </div>
     </section>
 
     <!-- HISTORY: every bill, filtered by table, waiter and dates -->
@@ -419,8 +465,7 @@
       return e;
     }
     function billNo(n) { return String(n).padStart(4, '0'); }
-    const STATUS_LABEL = { new: 'Чека потврда', accepted: 'Потврдена', served: 'Сервирана' };
-    const NEXT_STATUS = { new: ['accepted', 'Потврди'], accepted: ['served', 'Сервирано'] };
+    const STATUS_LABEL = { new: 'Нова', accepted: 'Примена', served: 'Сервирана' };
     const METHOD_LABEL = { cash: 'Готовина', card: 'Картичка' };
 
     const waiterSel = $('waiter');
@@ -462,19 +507,23 @@
         const card = el('button', 'table-card');
         card.type = 'button';
         card.appendChild(el('div', 'table-no', t));
+        const next = nextBooking(t);
         if (!bill) {
           card.classList.add('free');
-          card.appendChild(el('div', 'table-state', 'Слободна'));
+          const soon = next && new Date(next.starts_at) - Date.now() < 60 * 60000;
+          if (soon) card.classList.add('reserved');
+          card.appendChild(el('div', 'table-state', soon ? 'Резервирана' : 'Слободна'));
         } else {
           const fresh = bill.rounds.filter(r => r.status === 'new' && !r.rejected).length;
           newRounds += fresh;
           let state = 'Отворена';
-          if (fresh) { card.classList.add('has-new'); state = fresh === 1 ? 'Да се потврди' : fresh + ' за потврда'; }
+          if (fresh) { card.classList.add('has-new'); state = fresh === 1 ? 'Нова нарачка' : fresh + ' нови нарачки'; }
           else if (bill.requestedAt) { card.classList.add('wants-bill'); state = 'Бара сметка'; }
           card.appendChild(el('div', 'table-state', state));
           card.appendChild(el('div', 'table-total', den(bill.total)));
           card.appendChild(el('div', 'table-since', 'од ' + timeOf(bill.openedAt) + ' · ' + bill.rounds.length + ' нар.'));
         }
+        if (next) card.appendChild(el('div', 'table-booking', '📅 ' + timeOf(next.starts_at) + ' ' + next.guest_name + ' (' + next.people + ')'));
         if (selected === t) card.classList.add('selected');
         card.addEventListener('click', function () { selected = t; render(); });
         box.appendChild(card);
@@ -488,7 +537,7 @@
       const p = $('panel');
       p.innerHTML = '';
       if (!selected) {
-        p.appendChild(el('div', 'panel-empty', 'Изберете маса за да ги видите нарачките, да ги прифатите или да ја затворите сметката.'));
+        p.appendChild(el('div', 'panel-empty', 'Изберете маса.'));
         return;
       }
       const bill = st.bills[st.openByTable[selected]];
@@ -499,21 +548,39 @@
         const add = el('button', 'btn gold', '+ Нова нарачка');
         add.type = 'button';
         add.addEventListener('click', () => openAdd(selected));
+        const book = el('button', 'btn', '📅 Резервирај');
+        book.type = 'button';
+        book.addEventListener('click', () => openBooking({ table_no: selected }));
         actions.appendChild(add);
+        actions.appendChild(book);
         p.appendChild(actions);
+        panelBookings(p, selected);
         return;
       }
-      p.appendChild(el('div', 'panel-sub', 'Сметка отворена ' + dateOf(bill.openedAt) + ' во ' + timeOf(bill.openedAt) +
+      p.appendChild(el('div', 'panel-sub', 'Отворена во ' + timeOf(bill.openedAt) +
         (bill.requestedAt ? ' · бара сметка од ' + timeOf(bill.requestedAt) : '')));
+
+      // One tap takes every new order on the table.
+      const fresh = bill.rounds.filter(r => r.status === 'new' && !r.rejected);
+      if (fresh.length) {
+        const take = el('button', 'btn gold take-all', '✓ Примено — ' + (fresh.length === 1 ? '1 нова нарачка' : fresh.length + ' нови нарачки'));
+        take.type = 'button';
+        take.addEventListener('click', function () {
+          const w = waiter(); if (!w) return;
+          act(() => Ledger.staffAcceptTable(selected, w));
+        });
+        p.appendChild(take);
+      }
 
       bill.rounds.forEach(function (r, i) {
         const box = el('div', 'round ' + (r.rejected ? 'rejected' : r.status));
         const head = el('div', 'round-head');
         const left = el('span');
-        left.appendChild(el('b', null, '🔒 Нарачка ' + (i + 1)));
-        left.appendChild(document.createTextNode(' · ' + timeOf(r.at) + ' · ' + (r.by === 'guest' ? 'гостин (QR)' : 'келнер ' + r.waiter)));
+        left.appendChild(el('b', null, timeOf(r.at)));
+        left.appendChild(document.createTextNode(' · ' + (r.by === 'guest' ? 'гостин' : r.waiter)));
         head.appendChild(left);
-        head.appendChild(el('span', 'mono', '#' + r.seq));
+        if (r.rejected) head.appendChild(el('span', 'pill rejected', 'Одбиена · ' + r.rejected.by));
+        else head.appendChild(el('span', 'pill ' + r.status, STATUS_LABEL[r.status] + (r.statusBy ? ' · ' + r.statusBy : '')));
         box.appendChild(head);
         r.items.forEach(function (it) {
           const line = el('div', 'line');
@@ -523,67 +590,36 @@
           line.appendChild(el('span', 'amt', den(it.price * it.qty)));
           box.appendChild(line);
         });
-        if (r.movedFrom) {
-          box.appendChild(el('div', 'round-note', '↪ Префрлена од маса ' + r.movedFrom.table + ' · ' + r.movedFrom.by + ' ' + timeOf(r.movedFrom.at)));
-        }
-        const foot = el('div', 'round-foot');
-        if (r.rejected) {
-          foot.appendChild(el('span', 'pill rejected', 'Одбиена · ' + r.rejected.by + ' ' + timeOf(r.rejected.at)));
-          foot.appendChild(el('span', 'round-note', r.rejected.reason));
-          box.appendChild(foot);
-          p.appendChild(box);
-          return;
-        }
-        foot.appendChild(el('span', 'pill ' + r.status, STATUS_LABEL[r.status] + (r.statusBy ? ' · ' + r.statusBy + ' ' + timeOf(r.statusAt) : '')));
-        const next = NEXT_STATUS[r.status];
-        if (r.status === 'new' && r.by === 'guest') {
-          // The waiter is at the table: they confirm where the guest really sits.
-          const btns = el('span', 'round-btns');
-          const reject = el('button', 'btn small', 'Одбиј');
-          reject.type = 'button';
-          reject.addEventListener('click', () => openReject(r));
-          const move = el('button', 'btn small', 'Друга маса');
+        if (r.movedFrom) box.appendChild(el('div', 'round-note', '↪ од маса ' + r.movedFrom.table + ' · ' + r.movedFrom.by));
+        if (r.rejected) box.appendChild(el('div', 'round-note', r.rejected.reason));
+        // Only when something is wrong: quiet links, not buttons in the way.
+        if (r.status === 'new' && !r.rejected && r.by === 'guest') {
+          const fix = el('div', 'round-fix');
+          const move = el('button', 'link', 'друга маса');
           move.type = 'button';
           move.addEventListener('click', () => openMove(r));
-          const ok = el('button', 'btn small gold', 'Потврди · маса ' + r.table);
-          ok.type = 'button';
-          ok.addEventListener('click', function () {
-            const w = waiter(); if (!w) return;
-            act(() => Ledger.staffAccept(r.seq, r.table, w));
-          });
-          btns.appendChild(reject);
-          btns.appendChild(move);
-          btns.appendChild(ok);
-          foot.appendChild(btns);
-        } else if (next) {
-          const b = el('button', 'btn small ' + (r.status === 'new' ? 'gold' : ''), next[1]);
-          b.type = 'button';
-          b.addEventListener('click', function () {
-            const w = waiter(); if (!w) return;
-            act(() => Ledger.staffStatus(r.seq, next[0], w));
-          });
-          foot.appendChild(b);
+          const reject = el('button', 'link', 'одбиј');
+          reject.type = 'button';
+          reject.addEventListener('click', () => openReject(r));
+          fix.appendChild(move);
+          fix.appendChild(document.createTextNode(' · '));
+          fix.appendChild(reject);
+          box.appendChild(fix);
         }
-        box.appendChild(foot);
         p.appendChild(box);
       });
 
-      const total = el('div', 'bill-total');
-      total.appendChild(el('span', null, 'Вкупно'));
-      total.appendChild(el('span', null, den(bill.total)));
-      p.appendChild(total);
-
       const actions = el('div', 'panel-actions');
-      const add = el('button', 'btn', '+ Додај нарачка');
+      const add = el('button', 'btn', '+ Додај');
       add.type = 'button';
       add.addEventListener('click', () => openAdd(selected));
-      const close = el('button', 'btn green', 'Наплати и затвори');
+      const close = el('button', 'btn green pay', 'Наплати ' + den(bill.total));
       close.type = 'button';
       close.addEventListener('click', () => openClose(bill.id));
       actions.appendChild(add);
       actions.appendChild(close);
       p.appendChild(actions);
-      p.appendChild(el('p', 'rule', 'Испратените нарачки не можат да се менуваат или бришат. Ако гостинот сака уште нешто, се додава нова нарачка.'));
+      panelBookings(p, selected);
     }
 
     // ---- MODAL ----
@@ -597,6 +633,181 @@
     function closeModal() { $('modal').hidden = true; }
     $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ---- RESERVATIONS ----
+    /* Kept in their own table, readable only by signed-in staff. A booking
+       is never deleted: it is marked arrived, cancelled or no-show. */
+    const BK_STATUS = { booked: 'Резервирано', seated: 'Дојдоа', cancelled: 'Откажано', no_show: 'Не дојдоа' };
+    let bookings = [];          // from yesterday to 60 days ahead, plus the day being viewed
+    let bkDay = new Date();
+
+    function dayStart(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+    async function loadBookings() {
+      const from = dayStart(Math.min(Date.now(), bkDay.getTime()) - 86400000);
+      const to = new Date(Math.max(Date.now(), bkDay.getTime()) + 60 * 86400000);
+      const res = await Ledger.db.from('reservations').select('*')
+        .gte('starts_at', from.toISOString()).lt('starts_at', to.toISOString()).order('starts_at');
+      if (!res.error) { bookings = res.data; render(); }
+    }
+    Ledger.db.channel('reservations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, loadBookings)
+      .subscribe();
+
+    function live(b) { return b.status === 'booked' || b.status === 'seated'; }
+    // The next booking still to arrive at a table, today only.
+    function nextBooking(t) {
+      const now = Date.now(), end = dayStart(now).getTime() + 86400000;
+      return bookings.find(b => b.table_no === t && b.status === 'booked' &&
+        new Date(b.ends_at) > now && new Date(b.starts_at) < end) || null;
+    }
+    function bookingsOn(day, table) {
+      const a = dayStart(day).getTime(), z = a + 86400000;
+      return bookings.filter(b => {
+        const s = new Date(b.starts_at).getTime();
+        return s >= a && s < z && (!table || b.table_no === table);
+      });
+    }
+
+    async function setBookingStatus(b, status) {
+      const w = waiter(); if (!w) return;
+      const res = await Ledger.db.from('reservations').update({ status: status, updated_by: w }).eq('id', b.id);
+      if (res.error) alert(res.error.message);
+      loadBookings();
+    }
+
+    function bookingRow(b, withTable) {
+      const row = el('div', 'bk ' + b.status);
+      const main = el('div', 'bk-main');
+      main.appendChild(el('b', null, timeOf(b.starts_at)));
+      main.appendChild(document.createTextNode((withTable ? 'Маса ' + b.table_no + ' · ' : '') + b.guest_name + ' · ' + b.people + (b.people === 1 ? ' лице' : ' лица')));
+      const meta = [timeOf(b.starts_at) + '–' + timeOf(b.ends_at), b.phone, b.note, BK_STATUS[b.status],
+                    'внесе ' + b.created_by + (b.updated_by ? ', измени ' + b.updated_by : '')].filter(Boolean).join(' · ');
+      main.appendChild(el('div', 'bk-meta', meta));
+      row.appendChild(main);
+      if (b.status === 'booked') {
+        const acts = el('div', 'bk-actions');
+        [['seated', 'Дојдоа', 'btn small gold'], ['no_show', 'Не дојдоа', 'btn small'], ['cancelled', 'Откажи', 'btn small']].forEach(function (a) {
+          const x = el('button', a[2], a[1]);
+          x.type = 'button';
+          x.addEventListener('click', () => setBookingStatus(b, a[0]));
+          acts.appendChild(x);
+        });
+        row.appendChild(acts);
+      }
+      return row;
+    }
+
+    function panelBookings(p, table) {
+      const today = bookingsOn(new Date(), table).filter(b => b.status === 'booked');
+      if (!today.length) return;
+      const box = el('div', 'bk-list');
+      box.appendChild(el('h3', null, 'Резервации денес'));
+      today.forEach(b => box.appendChild(bookingRow(b, false)));
+      p.appendChild(box);
+    }
+
+    function renderBookings() {
+      $('bkDay').value = isoDay(bkDay);
+      const list = $('bkList');
+      list.innerHTML = '';
+      const day = bookingsOn(bkDay);
+      if (!day.length) list.appendChild(el('p', 'muted', 'Нема резервации за ' + dateOf(bkDay) + '.'));
+      day.forEach(b => list.appendChild(bookingRow(b, true)));
+
+      // Which tables are taken this evening, at a glance.
+      const free = $('bkFree');
+      free.innerHTML = '';
+      free.appendChild(el('div', 'panel-title', dateOf(bkDay)));
+      const taken = {};
+      day.filter(live).forEach(b => { (taken[b.table_no] = taken[b.table_no] || []).push(timeOf(b.starts_at) + '–' + timeOf(b.ends_at)); });
+      const grid = el('div', 'move-grid');
+      for (let t = 1; t <= Ledger.TABLES; t++) {
+        const b = el('button', 'btn' + (taken[t] ? ' booked' : ''), t);
+        b.type = 'button';
+        b.title = taken[t] ? taken[t].join(', ') : 'слободна цел ден';
+        b.addEventListener('click', () => openBooking({ table_no: t, day: bkDay }));
+        grid.appendChild(b);
+      }
+      free.appendChild(grid);
+      free.appendChild(el('p', 'rule', 'Сините маси имаат резервација овој ден (држете го глувчето над нив за времето). Кликнете на маса за нова резервација.'));
+    }
+
+    function shiftDay(days) { bkDay = new Date(dayStart(bkDay).getTime() + days * 86400000 + 12 * 3600000); loadBookings(); }
+    $('bkPrev').addEventListener('click', () => shiftDay(-1));
+    $('bkNext').addEventListener('click', () => shiftDay(1));
+    $('bkToday').addEventListener('click', () => { bkDay = new Date(); loadBookings(); });
+    $('bkDay').addEventListener('change', function () {
+      if (this.value) { bkDay = new Date(this.value + 'T12:00:00'); loadBookings(); }
+    });
+    $('bkNew').addEventListener('click', () => openBooking({ day: bkDay }));
+
+    function openBooking(pre) {
+      if (!waiter()) return;
+      openModal(function (box) {
+        box.appendChild(el('div', 'modal-title', 'Нова резервација'));
+        box.appendChild(el('div', 'panel-sub', 'Внесува: ' + waiterSel.value + ' · гостите не ги гледаат резервациите'));
+        const f = el('div', 'form-grid');
+        function field(label, input, wide) {
+          const l = el('label', wide ? 'wide' : null, label);
+          l.appendChild(input);
+          f.appendChild(l);
+          return input;
+        }
+        const date = field('Датум', Object.assign(el('input'), { type: 'date', value: isoDay(pre.day || new Date()) }));
+        const time = field('Час', Object.assign(el('input'), { type: 'time', value: '20:00', step: 900 }));
+        const len = field('Траење', el('select'));
+        [[60, '1 час'], [90, '1,5 час'], [120, '2 часа'], [180, '3 часа'], [300, 'цела вечер']].forEach(o => len.appendChild(new Option(o[1], o[0])));
+        len.value = '120';
+        const table = field('Маса', el('select'));
+        for (let t = 1; t <= Ledger.TABLES; t++) table.appendChild(new Option('Маса ' + t, t));
+        table.value = String(pre.table_no || 1);
+        const people = field('Лица', Object.assign(el('input'), { type: 'number', min: 1, max: 60, value: 2 }));
+        const name = field('Име', Object.assign(el('input'), { placeholder: 'Петров' }));
+        const phone = field('Телефон (не мора)', Object.assign(el('input'), { type: 'tel', placeholder: '07x xxx xxx' }));
+        const note = field('Забелешка (не мора)', Object.assign(el('input'), { placeholder: 'роденден, до прозорец…' }), true);
+        box.appendChild(f);
+        const err = el('p', 'warn');
+        err.hidden = true;
+        box.appendChild(err);
+
+        const actions = el('div', 'modal-actions');
+        const cancel = el('button', 'btn', 'Откажи');
+        cancel.type = 'button';
+        cancel.addEventListener('click', closeModal);
+        const save = el('button', 'btn gold', 'Резервирај');
+        save.type = 'button';
+        save.addEventListener('click', async function () {
+          const w = waiter(); if (!w) return;
+          err.hidden = true;
+          if (!name.value.trim() || !date.value || !time.value) {
+            err.hidden = false; err.textContent = 'Внесете датум, час и име.'; return;
+          }
+          const starts = new Date(date.value + 'T' + time.value + ':00');
+          const ends = new Date(starts.getTime() + Number(len.value) * 60000);
+          save.disabled = true;
+          const res = await Ledger.db.from('reservations').insert({
+            table_no: Number(table.value), starts_at: starts.toISOString(), ends_at: ends.toISOString(),
+            guest_name: name.value.trim(), people: Number(people.value) || 2,
+            phone: phone.value.trim() || null, note: note.value.trim() || null, created_by: w
+          });
+          save.disabled = false;
+          if (res.error) {
+            err.hidden = false;
+            err.textContent = res.error.code === '23P01'
+              ? 'Маса ' + table.value + ' е веќе резервирана во тоа време. Изберете друга маса или час.'
+              : 'Не е зачувано: ' + res.error.message;
+            return;
+          }
+          bkDay = starts;
+          closeModal();
+          loadBookings();
+        });
+        actions.appendChild(cancel);
+        actions.appendChild(save);
+        box.appendChild(actions);
+        setTimeout(() => name.focus(), 30);
+      });
+    }
 
     // ---- CONFIRM AT ANOTHER TABLE ----
     function openMove(r) {
@@ -670,46 +881,38 @@
     }
 
     // ---- CLOSE THE BILL ----
+    // Two big buttons; one tap takes the money and closes the bill.
     function openClose(billId) {
       if (!waiter()) return;
       const bill = Ledger.state().bills[billId];
-      let method = null;
+      const fresh = bill.rounds.filter(r => r.status === 'new' && !r.rejected).length;
       openModal(function (box) {
         box.appendChild(el('div', 'modal-title', 'Наплати · Маса ' + bill.table));
-        box.appendChild(el('div', 'panel-sub', bill.rounds.length + ' нарачки · келнер ' + waiterSel.value));
-        const total = el('div', 'bill-total');
-        total.appendChild(el('span', null, 'За плаќање'));
-        total.appendChild(el('span', null, den(bill.total)));
-        box.appendChild(total);
-        const methods = el('div', 'pay-methods');
-        const confirmBtn = el('button', 'btn green', 'Затвори сметка');
-        confirmBtn.type = 'button';
-        confirmBtn.disabled = true;
-        ['cash', 'card'].forEach(function (m) {
-          const b = el('button', 'btn', METHOD_LABEL[m]);
+        box.appendChild(el('div', 'panel-sub', 'Келнер: ' + waiterSel.value));
+        const methods = el('div', 'pay-methods big');
+        [['cash', '💵'], ['card', '💳']].forEach(function (m) {
+          const b = el('button', 'btn pay-btn');
           b.type = 'button';
-          b.addEventListener('click', function () {
-            method = m;
-            methods.querySelectorAll('.btn').forEach(x => x.classList.toggle('active', x === b));
-            confirmBtn.disabled = false;
+          b.appendChild(el('span', 'pay-icon', m[1]));
+          b.appendChild(el('span', 'pay-label', METHOD_LABEL[m[0]]));
+          b.appendChild(el('span', 'pay-amount', den(bill.total)));
+          b.addEventListener('click', async function () {
+            const w = waiter(); if (!w) return;
+            methods.querySelectorAll('.btn').forEach(x => { x.disabled = true; });
+            const ev = await act(() => Ledger.staffClose(billId, m[0], w));
+            if (ev) showReceipt(billId);
+            else methods.querySelectorAll('.btn').forEach(x => { x.disabled = false; });
           });
           methods.appendChild(b);
         });
         box.appendChild(methods);
-        box.appendChild(el('p', 'warn', 'По затворање сметката добива број и е конечна: износот, ставките и времето не можат да се менуваат, а сметката не може повторно да се отвори.'));
+        if (fresh) box.appendChild(el('p', 'rule', fresh + (fresh === 1 ? ' нова нарачка ќе се прими' : ' нови нарачки ќе се примат') + ' автоматски на ваше име.'));
+        box.appendChild(el('p', 'rule', 'Затворената сметка добива број и повеќе не се менува.'));
         const actions = el('div', 'modal-actions');
         const cancel = el('button', 'btn', 'Откажи');
         cancel.type = 'button';
         cancel.addEventListener('click', closeModal);
-        confirmBtn.addEventListener('click', async function () {
-          const w = waiter(); if (!w || !method) return;
-          confirmBtn.disabled = true;
-          const ev = await act(() => Ledger.staffClose(billId, method, w));
-          if (ev) showReceipt(billId);
-          else confirmBtn.disabled = false;
-        });
         actions.appendChild(cancel);
-        actions.appendChild(confirmBtn);
         box.appendChild(actions);
       });
     }
@@ -1206,13 +1409,14 @@
       if (view === 'report') renderReport(st);
       if (view === 'log') renderLog(st);
       if (view === 'history') renderHistory(st);
+      if (view === 'bookings') renderBookings();
     }
 
     document.querySelectorAll('.tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
         view = tab.dataset.view;
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
-        ['floor', 'report', 'history', 'log'].forEach(v => { $('view-' + v).hidden = v !== view; });
+        ['floor', 'report', 'bookings', 'history', 'log'].forEach(v => { $('view-' + v).hidden = v !== view; });
         render();
       });
     });
@@ -1279,7 +1483,7 @@
         return;
       }
       $('loginPass').value = '';
-      if (await checkLogin()) loadCatalog();
+      if (await checkLogin()) { loadCatalog(); loadBookings(); }
     });
     $('signOut').addEventListener('click', async function () {
       await Ledger.db.auth.signOut();
@@ -1293,7 +1497,7 @@
     setInterval(tick, 15000);
     setInterval(render, 60000);   // keeps "minutes since" and the day honest
 
-    checkLogin().then(ok => { if (ok) loadCatalog(); });
+    checkLogin().then(ok => { if (ok) { loadCatalog(); loadBookings(); } });
     render();
   </script>
 </body>

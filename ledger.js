@@ -183,6 +183,7 @@
 
     staffOrder: (table, list, waiter) => rpc('staff_order', { p_table: table, p_items: items(list), p_waiter: waiter }),
     staffStatus: (round, status, waiter) => rpc('staff_status', { p_round: round, p_status: status, p_waiter: waiter }),
+    staffAcceptTable: (table, waiter) => rpc('staff_accept_table', { p_table: table, p_waiter: waiter }),
     staffAccept: (round, table, waiter) => rpc('staff_accept', { p_round: round, p_table: table, p_waiter: waiter }),
     staffReject: (round, reason, waiter) => rpc('staff_reject', { p_round: round, p_reason: reason, p_waiter: waiter }),
     staffClose: (bill, method, waiter) => rpc('staff_close', { p_bill: bill, p_method: method, p_waiter: waiter }),
