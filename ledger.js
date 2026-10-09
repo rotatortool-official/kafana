@@ -1,89 +1,95 @@
 /* ==================================================================
-   KAFANA LEDGER
+   KAFANA LEDGER — client
 
-   Every order, status change and closed bill is an EVENT appended to
-   one list. Nothing is ever edited or deleted: there is no function
-   for it. The tables, bills and reports are all worked out by reading
-   that list from the top.
+   Every order, status change and closed bill is an EVENT in one list
+   on the server (Supabase project "kafana"). Nothing in it is ever
+   edited or deleted: the database refuses it, for everyone. The tables,
+   bills and reports are all worked out here by reading that list from
+   the top.
 
-   Each event carries a seal made from its own content and the seal of
-   the event before it. Change any old event and every seal after it
-   stops matching, so the staff screen shows exactly where the history
-   was touched.
+   The server applies the rules, not this file: it takes prices from its
+   own menu table, stamps the time, numbers the bills and refuses any
+   change to an order once it is sent. A phone can only ask; it cannot
+   decide.
 
-   DEMO STORAGE: this version keeps the list in the browser
-   (localStorage), so the menu and the staff screen must be open in the
-   same browser — two tabs on one laptop. The production version keeps
-   the same list on a server, which adds the clock, the prices and the
-   rules below, so a phone cannot get around them. Only this file
-   changes between the two.
+   Each event carries a SHA-256 seal of its own content and the seal of
+   the event before it, so any change made around the rules (straight
+   in the database) shows up on the staff screen.
    ================================================================== */
 (function (global) {
   'use strict';
 
-  const KEY = 'kafana.ledger.v1';
+  const URL = 'https://zrlszhpesifpuikwgxnk.supabase.co';
+  const KEY = 'sb_publishable_HZV7ivm4v9ny_MSzLFWf2Q_LbhTfsp6';   // public by design
   const TABLES = 20;
-  const MAX_QTY = 50;
+  const PAGE = 1000;
 
-  // ---- SEAL ----
-  // cyrb53: fast and synchronous. It shows tampering in the demo; the
-  // server version would use SHA-256 and keep the list where a phone
-  // cannot write to it at all.
-  function seal(str) {
-    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-    for (let i = 0; i < str.length; i++) {
-      const ch = str.charCodeAt(i);
-      h1 = Math.imul(h1 ^ ch, 2654435761);
-      h2 = Math.imul(h2 ^ ch, 1597334677);
+  const db = global.supabase.createClient(URL, KEY);
+
+  let cache = [];
+  const listeners = [];
+  function notify() { listeners.forEach(function (fn) { fn(); }); }
+
+  // ---- LOADING ----
+  // The screens only need what happened since the last test reset.
+  async function loadAll() {
+    const reset = await db.from('events').select('seq').eq('type', 'reset')
+      .order('seq', { ascending: false }).limit(1);
+    if (reset.error) throw reset.error;
+    const from = reset.data.length ? reset.data[0].seq : 0;
+    const out = [];
+    for (let start = 0; ; start += PAGE) {
+      const res = await db.from('events').select('*').gte('seq', from)
+        .order('seq').range(start, start + PAGE - 1);
+      if (res.error) throw res.error;
+      out.push.apply(out, res.data);
+      if (res.data.length < PAGE) break;
     }
-    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
-  }
-  function sealOf(ev) {
-    return seal(JSON.stringify([ev.seq, ev.at, ev.type, ev.data, ev.prev]));
+    cache = out;
   }
 
-  // ---- STORAGE ----
-  function load() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) { return []; }
+  async function loadNew() {
+    const last = cache.length ? cache[cache.length - 1].seq : 0;
+    const res = await db.from('events').select('*').gt('seq', last).order('seq').limit(PAGE);
+    if (res.error) return;
+    if (!res.data.length) return;
+    if (res.data.some(function (e) { return e.type === 'reset'; })) await loadAll();
+    else cache = cache.concat(res.data);
+    notify();
   }
-  function store(events) {
-    localStorage.setItem(KEY, JSON.stringify(events));
+
+  let pending = null;
+  function refresh() {
+    if (!pending) pending = loadNew().finally(function () { pending = null; });
+    return pending;
   }
 
   // ---- STATE: replay the list ----
-  const STATUS_ORDER = ['new', 'accepted', 'served'];
-
   function replay(events) {
-    const bills = {};          // billId -> bill
-    const openByTable = {};    // table -> billId
-    const rounds = {};         // round seq -> round
-    let billCount = 0;
+    let bills = {}, openByTable = {}, rounds = {}, billCount = 0;
 
     events.forEach(function (ev) {
       const d = ev.data;
-      if (ev.type === 'round') {
-        let billId = openByTable[d.table];
-        if (!billId) {
-          billId = ev.seq;
-          openByTable[d.table] = billId;
+      if (ev.type === 'reset') {
+        bills = {}; openByTable = {}; rounds = {}; billCount = 0;
+      } else if (ev.type === 'round') {
+        const billId = d.bill;
+        if (!bills[billId]) {
           bills[billId] = {
             id: billId, table: d.table, openedAt: ev.at, rounds: [],
             total: 0, status: 'open', requestedAt: null
           };
+          openByTable[d.table] = billId;
         }
         const round = {
           seq: ev.seq, billId: billId, table: d.table, at: ev.at,
-          items: d.items, total: d.total, by: d.by, waiter: d.waiter || null,
+          items: d.items.map(function (it) { return { name: it.name, qty: it.qty, price: Number(it.price), category: it.category }; }),
+          total: Number(d.total), by: d.by, waiter: d.waiter || null,
           status: 'new', statusAt: ev.at, statusBy: null
         };
         rounds[ev.seq] = round;
         bills[billId].rounds.push(round);
-        bills[billId].total += d.total;
+        bills[billId].total += round.total;
         bills[billId].lastAt = ev.at;
       } else if (ev.type === 'status') {
         const r = rounds[d.round];
@@ -100,107 +106,64 @@
           b.closedBy = d.waiter;
           b.method = d.method;
           b.number = d.number;
-          delete openByTable[b.table];
+          if (openByTable[b.table] === b.id) delete openByTable[b.table];
         }
       }
     });
     return { bills: bills, openByTable: openByTable, rounds: rounds, billCount: billCount };
   }
 
-  // ---- RULES ----
-  // What the server would refuse. The demo refuses the same things here.
-  function check(type, data, state) {
-    if (type === 'round') {
-      const t = Number(data.table);
-      if (!Number.isInteger(t) || t < 1 || t > TABLES) throw new Error('Непозната маса');
-      if (!Array.isArray(data.items) || !data.items.length) throw new Error('Празна нарачка');
-      let total = 0;
-      data.items.forEach(function (it) {
-        if (!it.name || !(it.price > 0)) throw new Error('Ставка без цена');
-        if (!Number.isInteger(it.qty) || it.qty < 1 || it.qty > MAX_QTY) throw new Error('Неважечка количина');
-        total += it.price * it.qty;
-      });
-      data.total = Math.round(total * 100) / 100;   // the total is never taken from the caller
-      if (data.by === 'waiter' && !data.waiter) throw new Error('Изберете келнер');
-    } else if (type === 'status') {
-      const r = state.rounds[data.round];
-      if (!r) throw new Error('Непозната нарачка');
-      if (state.bills[r.billId].status !== 'open') throw new Error('Сметката е затворена');
-      if (STATUS_ORDER.indexOf(data.status) <= STATUS_ORDER.indexOf(r.status)) {
-        throw new Error('Статусот оди само напред');
-      }
-      if (!data.waiter) throw new Error('Изберете келнер');
-    } else if (type === 'bill_request') {
-      const b = state.bills[data.bill];
-      if (!b || b.status !== 'open') throw new Error('Нема отворена сметка');
-    } else if (type === 'close') {
-      const b = state.bills[data.bill];
-      if (!b) throw new Error('Непозната сметка');
-      if (b.status !== 'open') throw new Error('Сметката е веќе затворена');
-      if (!data.waiter) throw new Error('Изберете келнер');
-      if (data.method !== 'cash' && data.method !== 'card') throw new Error('Изберете начин на плаќање');
-      data.total = b.total;
-      data.number = state.billCount + 1;
-    } else {
-      throw new Error('Непознат настан');
-    }
+  // ---- WRITING: always through the server's rules ----
+  async function rpc(name, args) {
+    const res = await db.rpc(name, args);
+    if (res.error) throw new Error(res.error.message || 'Грешка при врската');
+    await refresh();
+    return res.data;
   }
-
-  // ---- PUBLIC ----
-  const listeners = [];
+  const items = list => list.map(it => ({ name: it.name, qty: it.qty }));   // never a price
 
   const Ledger = {
     TABLES: TABLES,
+    db: db,
 
-    events: load,
+    ready: loadAll().then(notify),
 
-    state: function () { return replay(load()); },
+    events: function () { return cache; },
+    state: function () { return replay(cache); },
 
-    /* The only way anything gets written. Returns the new event. */
-    append: function (type, data) {
-      const events = load();
-      const state = replay(events);
-      data = JSON.parse(JSON.stringify(data));
-      check(type, data, state);
-      const last = events[events.length - 1];
-      const ev = {
-        seq: last ? last.seq + 1 : 1,
-        at: new Date().toISOString(),
-        type: type,
-        data: data,
-        prev: last ? last.hash : '0'
-      };
-      ev.hash = sealOf(ev);
-      events.push(ev);
-      store(events);
-      listeners.forEach(function (fn) { fn(); });
-      return ev;
-    },
+    guestOrder: (table, list) => rpc('guest_order', { p_table: table, p_items: items(list) }),
+    requestBill: table => rpc('guest_request_bill', { p_table: table }),
+
+    staffOrder: (table, list, waiter) => rpc('staff_order', { p_table: table, p_items: items(list), p_waiter: waiter }),
+    staffStatus: (round, status, waiter) => rpc('staff_status', { p_round: round, p_status: status, p_waiter: waiter }),
+    staffClose: (bill, method, waiter) => rpc('staff_close', { p_bill: bill, p_method: method, p_waiter: waiter }),
+    resetTest: waiter => rpc('staff_reset_test', { p_waiter: waiter }).then(loadAll).then(notify),
 
     /* First event whose seal no longer matches, or null if all is intact. */
-    verify: function () {
-      const events = load();
-      let prev = '0';
-      for (let i = 0; i < events.length; i++) {
-        const ev = events[i];
-        if (ev.prev !== prev || ev.hash !== sealOf(ev) || ev.seq !== i + 1) return ev.seq || i + 1;
-        prev = ev.hash;
-      }
-      return null;
+    verify: async function () {
+      const res = await db.rpc('verify_ledger');
+      if (res.error) throw new Error(res.error.message);
+      return res.data;
     },
 
-    onChange: function (fn) {
-      listeners.push(fn);
-      global.addEventListener('storage', function (e) { if (e.key === KEY) fn(); });
+    isStaff: async function () {
+      const res = await db.rpc('is_staff');
+      return !res.error && res.data === true;
     },
 
-    /* Demo only: wipes the whole list so the showcase can start over.
-       The production ledger has no such switch. */
-    resetDemo: function () {
-      localStorage.removeItem(KEY);
-      listeners.forEach(function (fn) { fn(); });
-    }
+    onChange: function (fn) { listeners.push(fn); }
   };
+
+  // ---- LIVE ----
+  // New events arrive over realtime; a slow poll and a check on return to
+  // the tab cover a dropped connection or a phone that went to sleep.
+  db.channel('events')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events' }, refresh)
+    .subscribe();
+  setInterval(refresh, 10000);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') refresh();
+  });
 
   global.Ledger = Ledger;
 })(window);

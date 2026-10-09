@@ -1900,6 +1900,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
   <script src="ledger.js"></script>
   <script>
     // ---- STATE ----
@@ -2475,22 +2476,29 @@
     };
     window.closeSend = function () { closeOverlay(sendOverlay); };
 
-    window.confirmSend = function () {
-      if (!pickedTable || !Object.keys(cart).length) return;
-      const items = Object.keys(cart).map(name => ({
-        name: name, price: cart[name].price, qty: cart[name].qty, category: cart[name].category
-      }));
+    /* Only names and quantities leave the phone. The server prices them
+       from its own menu and stamps the time. */
+    let sending = false;
+    window.confirmSend = async function () {
+      if (sending || !pickedTable || !Object.keys(cart).length) return;
+      const items = Object.keys(cart).map(name => ({ name: name, qty: cart[name].qty }));
+      sending = true;
+      sendConfirm.disabled = true;
+      sendConfirm.textContent = 'Се испраќа…';
       let ev;
       try {
-        ev = Ledger.append('round', { table: pickedTable, items: items, by: 'guest' });
+        ev = await Ledger.guestOrder(pickedTable, items);
       } catch (e) {
         alert('Нарачката не е испратена: ' + e.message);
         return;
+      } finally {
+        sending = false;
+        renderSend();
       }
       table = pickedTable;
       try {
         sessionStorage.setItem(TABLE_KEY, String(table));
-        sessionStorage.setItem(BILL_KEY, String(Ledger.state().rounds[ev.seq].billId));
+        sessionStorage.setItem(BILL_KEY, String(ev.data.bill));
       } catch (e) { /* ignore */ }
       cart = {};
       renderCart();
@@ -2593,9 +2601,9 @@
     window.requestBill = function () {
       const bill = currentBill();
       if (!bill || bill.status !== 'open' || bill.requestedAt) return;
-      try { Ledger.append('bill_request', { bill: bill.id }); }
-      catch (e) { alert(e.message); return; }
-      toast('Келнерот е повикан на маса ' + table);
+      Ledger.requestBill(table)
+        .then(() => toast('Келнерот е повикан на маса ' + table))
+        .catch(e => alert(e.message));
     };
 
     // The staff screen accepts, serves and closes; the guest sees it live.

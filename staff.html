@@ -238,6 +238,9 @@
 
     .demo-foot { margin-top: 30px; padding: 14px 20px; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
     .demo-foot a { color: var(--accent-gold); }
+    .login-box { max-width: 400px; }
+    .field { display: block; margin-top: 14px; font-size: 0.85rem; color: var(--text-muted); }
+    .field input { margin-top: 6px; }
 
     @media (max-width: 1000px) {
       .floor { grid-template-columns: 1fr; }
@@ -306,13 +309,27 @@
   </main>
 
   <footer class="demo-foot">
-    <span>ДЕМО: менито и касата делат податоци само во ист прелистувач. Отворете го <a href="index.html?table=5" target="_blank">менито за маса 5</a> во друго јазиче.</span>
+    <span>ТЕСТ СРЕДИНА: отворете го <a href="index.html?table=5" target="_blank">менито за маса 5</a> на телефон или во друго јазиче.</span>
     <span class="spacer"></span>
-    <button class="btn small" type="button" id="resetDemo">Почни демо од почеток</button>
+    <button class="btn small" type="button" id="resetDemo">Почни тест од почеток</button>
+    <button class="btn small" type="button" id="signOut">Одјави се</button>
   </footer>
+
+  <!-- SIGN IN: the till's PC signs in once; waiters then pick their name -->
+  <div class="modal" id="login" hidden>
+    <form class="modal-box login-box" id="loginForm">
+      <div class="modal-title">Каса · најава</div>
+      <p class="panel-sub" id="loginNote">Само за персоналот на кафаната.</p>
+      <label class="field">Е-пошта<input class="search" type="email" id="loginEmail" autocomplete="username" required></label>
+      <label class="field">Лозинка<input class="search" type="password" id="loginPass" autocomplete="current-password" required></label>
+      <p class="warn" id="loginError" hidden></p>
+      <div class="modal-actions"><button class="btn gold" type="submit" id="loginBtn">Најави се</button></div>
+    </form>
+  </div>
 
   <div class="modal" id="modal" hidden><div class="modal-box" id="modalBox"></div></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
   <script src="ledger.js"></script>
   <script>
     // ---- HELPERS ----
@@ -347,9 +364,14 @@
       }
       return waiterSel.value;
     }
-    function act(type, data) {
-      try { return Ledger.append(type, data); }
+    /* Every write is a request to the server, which may refuse it. */
+    let busy = false;
+    async function act(call) {
+      if (busy) return null;
+      busy = true;
+      try { return await call(); }
       catch (e) { alert(e.message); return null; }
+      finally { busy = false; }
     }
 
     let selected = null;
@@ -434,7 +456,7 @@
           b.type = 'button';
           b.addEventListener('click', function () {
             const w = waiter(); if (!w) return;
-            act('status', { round: r.seq, status: next[0], waiter: w });
+            act(() => Ledger.staffStatus(r.seq, next[0], w));
           });
           foot.appendChild(b);
         }
@@ -504,10 +526,12 @@
         const cancel = el('button', 'btn', 'Откажи');
         cancel.type = 'button';
         cancel.addEventListener('click', closeModal);
-        confirmBtn.addEventListener('click', function () {
+        confirmBtn.addEventListener('click', async function () {
           const w = waiter(); if (!w || !method) return;
-          const ev = act('close', { bill: billId, method: method, waiter: w });
+          confirmBtn.disabled = true;
+          const ev = await act(() => Ledger.staffClose(billId, method, w));
           if (ev) showReceipt(billId);
+          else confirmBtn.disabled = false;
         });
         actions.appendChild(cancel);
         actions.appendChild(confirmBtn);
@@ -555,31 +579,12 @@
     }
 
     // ---- WAITER ADDS AN ORDER ----
-    /* Prices come from the menu itself, never typed in by hand, so a
-       coffee always costs what the menu says it costs. */
+    /* Prices come from the server's menu table, never typed in by hand,
+       and the server prices the order again anyway. */
     let catalog = [];
-    function loadCatalog() {
-      return fetch('index.html', { cache: 'no-store' })
-        .then(r => r.text())
-        .then(function (html) {
-          const doc = new DOMParser().parseFromString(html, 'text/html');
-          const seen = new Set();
-          catalog = [];
-          doc.querySelectorAll('.menu-item, .chef-details').forEach(function (c) {
-            const n = c.querySelector('.item-name'), pr = c.querySelector('.item-price');
-            if (!n || !pr) return;
-            const clone = n.cloneNode(true);
-            clone.querySelectorAll('.badge').forEach(b => b.remove());
-            const name = clone.textContent.replace(/\s+/g, ' ').trim();
-            const m = pr.textContent.replace(/ /g, ' ').match(/[\d.,]+/);
-            const price = m ? parseFloat(m[0].replace(',', '.')) : 0;
-            const holder = c.dataset.category ? c : c.closest('[data-category]');
-            if (!name || !price || seen.has(name)) return;
-            seen.add(name);
-            catalog.push({ name: name, price: price, category: holder ? holder.dataset.category : '' });
-          });
-        })
-        .catch(function () { catalog = []; });
+    async function loadCatalog() {
+      const res = await Ledger.db.from('menu_items').select('name,price,category').eq('active', true);
+      catalog = res.error ? [] : res.data.map(it => ({ name: it.name, price: Number(it.price), category: it.category }));
     }
 
     function openAdd(table) {
@@ -614,7 +619,7 @@
           const q = search.value.trim().toLowerCase();
           list.innerHTML = '';
           if (!catalog.length) {
-            list.appendChild(el('p', 'muted', 'Менито не можеше да се вчита. Отворете ја касата преку веб-адресата, не како датотека.'));
+            list.appendChild(el('p', 'muted', 'Менито не можеше да се вчита. Проверете ја интернет врската.'));
             return;
           }
           catalog.filter(it => !q || it.name.toLowerCase().includes(q)).forEach(function (it) {
@@ -662,7 +667,7 @@
         send.addEventListener('click', function () {
           const w = waiter(); if (!w) return;
           const items = Object.keys(draft).map(n => draft[n]);
-          if (act('round', { table: table, items: items, by: 'waiter', waiter: w })) closeModal();
+          act(() => Ledger.staffOrder(table, items, w)).then(ev => { if (ev) closeModal(); });
         });
         search.addEventListener('input', renderList);
         renderList();
@@ -755,6 +760,7 @@
         const b = st.bills[d.bill];
         return 'Сметка бр. ' + billNo(d.number) + ' (маса ' + (b ? b.table : '?') + ') затворена · ' + METHOD_LABEL[d.method] + ' · ' + den(d.total) + ' · ' + d.waiter;
       }
+      if (ev.type === 'reset') return '— Тест ресет: масите почнуваат од нула · ' + d.waiter + ' —';
       return ev.type;
     }
     function renderLog(st) {
@@ -776,8 +782,9 @@
     }
 
     // ---- RENDER ----
-    function renderSeal() {
-      const broken = Ledger.verify();
+    async function renderSeal() {
+      let broken = null;
+      try { broken = await Ledger.verify(); } catch (e) { return; }
       $('seal').classList.toggle('broken', !!broken);
       $('seal').textContent = broken ? '✗ Историјата е менувана' : '✓ Историјата е непроменета';
       $('tamper').hidden = !broken;
@@ -824,18 +831,53 @@
       });
     }
 
-    let lastSeq = (Ledger.events().slice(-1)[0] || {}).seq || 0;
+    let lastSeq = null;   // null until the first load, so old orders do not chime
     Ledger.onChange(function () {
       const events = Ledger.events();
-      if (events.slice(lastSeq).some(ev => ev.type === 'round' && ev.data.by === 'guest')) chime();
+      if (lastSeq !== null && events.some(ev => ev.seq > lastSeq && ev.type === 'round' && ev.data.by === 'guest')) chime();
       lastSeq = events.length ? events[events.length - 1].seq : 0;
       render();
     });
 
     $('resetDemo').addEventListener('click', function () {
-      if (!confirm('Демо: да се избришат сите нарачки и сметки и да се почне од нула? (Вистинската каса го нема ова копче.)')) return;
-      Ledger.resetDemo();
+      const w = waiter(); if (!w) return;
+      if (!confirm('Тест: да се почне од празни маси? Ништо не се брише — старите настани остануваат во дневникот, под линија „ресет“.')) return;
       selected = null;
+      act(() => Ledger.resetTest(w));
+    });
+
+    // ---- SIGN IN ----
+    async function checkLogin() {
+      const { data } = await Ledger.db.auth.getSession();
+      if (data.session && await Ledger.isStaff()) {
+        $('login').hidden = true;
+        return true;
+      }
+      $('login').hidden = false;
+      $('loginNote').textContent = data.session
+        ? 'Сметката ' + data.session.user.email + ' не е на листата на персонал.'
+        : 'Само за персоналот на кафаната.';
+      return false;
+    }
+    $('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      $('loginBtn').disabled = true;
+      $('loginError').hidden = true;
+      const { error } = await Ledger.db.auth.signInWithPassword({
+        email: $('loginEmail').value.trim(), password: $('loginPass').value
+      });
+      $('loginBtn').disabled = false;
+      if (error) {
+        $('loginError').hidden = false;
+        $('loginError').textContent = 'Најавата не успеа: ' + error.message;
+        return;
+      }
+      $('loginPass').value = '';
+      if (await checkLogin()) loadCatalog();
+    });
+    $('signOut').addEventListener('click', async function () {
+      await Ledger.db.auth.signOut();
+      checkLogin();
     });
 
     function tick() {
@@ -845,7 +887,7 @@
     setInterval(tick, 15000);
     setInterval(render, 60000);   // keeps "minutes since" and the day honest
 
-    loadCatalog();
+    checkLogin().then(ok => { if (ok) loadCatalog(); });
     render();
   </script>
 </body>
