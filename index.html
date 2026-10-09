@@ -2360,9 +2360,10 @@
     const BILL_KEY = 'kafana.lastBill';
 
     // The QR code on each table carries its number: ...index.html?table=5
+    // (the short ...index.html#5 works too, for a link typed by hand).
     function tableFromUrl() {
       const q = new URLSearchParams(location.search);
-      const n = Number(q.get('table') || q.get('masa'));
+      const n = Number(q.get('table') || q.get('masa') || location.hash.replace(/^#(table=|masa=)?/, ''));
       return Number.isInteger(n) && n >= 1 && n <= Ledger.TABLES ? n : null;
     }
     const urlTable = tableFromUrl();

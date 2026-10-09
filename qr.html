@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мојата Кафана - QR за маси</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Marcellus&display=swap" rel="stylesheet">
+  <style>
+    /* Printable table cards: every card looks the same except the number,
+       and each code opens the menu already set to its own table. */
+    :root {
+      --gold: #c8961a;
+      --ink: #111;
+      --font-display: 'Cinzel', Georgia, serif;
+      --font-label: 'Marcellus', Georgia, serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+    body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: #e9e6df; color: var(--ink); }
+
+    .bar {
+      display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: flex-end;
+      padding: 16px 20px; background: #0d1117; color: #f0f6fc; border-bottom: 2px solid #f3ba2f;
+    }
+    .bar h1 { font-family: var(--font-display); font-size: 1.2rem; color: #f3ba2f; margin-right: auto; }
+    .bar label { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; color: #8b949e; }
+    .bar input {
+      width: 90px; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid #30363d; background: #21262d; color: #f0f6fc; font-size: 0.95rem;
+    }
+    .bar input.url { width: min(420px, 80vw); }
+    .bar button {
+      padding: 9px 16px; border-radius: 8px; border: 1px solid #f3ba2f;
+      background: #f3ba2f; color: #0d1117; font-weight: 700; cursor: pointer;
+    }
+    .note { padding: 10px 20px; font-size: 0.85rem; color: #555; }
+
+    /* A4, three by three: cards about 6 × 8.5 cm, sized for a table stand. */
+    .sheet {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 62mm);
+      gap: 8mm;
+      justify-content: center;
+      padding: 10mm;
+    }
+    .card {
+      width: 62mm; height: 88mm;
+      padding: 5mm 5mm 4mm;
+      background: #fff;
+      border: 0.6mm solid var(--gold);
+      border-radius: 4mm;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+      text-align: center;
+      break-inside: avoid;
+    }
+    .card .name { font-family: var(--font-display); font-weight: 800; font-size: 13pt; letter-spacing: 0.5pt; }
+    .card .scan { font-family: var(--font-label); font-size: 7pt; letter-spacing: 0.6pt; white-space: nowrap; text-transform: uppercase; color: #555; }
+    .card .qr { width: 40mm; height: 40mm; }
+    .card .qr svg { width: 100%; height: 100%; display: block; }
+    .card .table { font-family: var(--font-display); font-weight: 800; font-size: 20pt; color: var(--gold); line-height: 1; }
+    .card .table small { font-size: 9pt; letter-spacing: 1.5pt; color: var(--ink); display: block; margin-bottom: 1mm; }
+
+    @media print {
+      @page { size: A4; margin: 8mm; }
+      body { background: #fff; }
+      .bar, .note { display: none; }
+      .sheet { padding: 0; gap: 6mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>QR кодови за масите</h1>
+    <label>Од маса<input type="number" id="from" min="1" max="20" value="1"></label>
+    <label>До маса<input type="number" id="to" min="1" max="20" value="20"></label>
+    <label>Адреса на менито<input class="url" id="base"></label>
+    <button type="button" onclick="window.print()">Печати</button>
+  </div>
+  <p class="note">Секој код го отвора менито веќе поставено на својата маса. Печатете на A4 (9 по страна), исечете и ставете ги на масите. Скенирајте еден со телефон пред да ги ставите.</p>
+  <div class="sheet" id="sheet"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script>
+    const sheet = document.getElementById('sheet');
+    const from = document.getElementById('from');
+    const to = document.getElementById('to');
+    const base = document.getElementById('base');
+    base.value = new URL('index.html', location.href).href;
+
+    function card(n) {
+      const url = base.value.trim() + '?table=' + n;
+      const qr = qrcode(0, 'M');   // medium error correction survives a scuffed card
+      qr.addData(url);
+      qr.make();
+      const c = document.createElement('div');
+      c.className = 'card';
+      c.innerHTML =
+        '<div class="name">Мојата Кафана</div>' +
+        '<div class="scan">Скенирај · нарачај · плати</div>' +
+        '<div class="qr">' + qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true }) + '</div>' +
+        '<div class="table"><small>МАСА</small>' + n + '</div>';
+      c.title = url;
+      return c;
+    }
+
+    function render() {
+      const a = Math.max(1, Math.min(20, Number(from.value) || 1));
+      const b = Math.max(a, Math.min(20, Number(to.value) || 20));
+      sheet.innerHTML = '';
+      for (let n = a; n <= b; n++) sheet.appendChild(card(n));
+    }
+    [from, to, base].forEach(x => x.addEventListener('input', render));
+    render();
+  </script>
+</body>
+</html>
